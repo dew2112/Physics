@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Physics Stadium: 포물선 운동 3D 뷰 시뮬레이터</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+            color: #f8fafc;
+            min-height: 100vh;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* Header */
+        header {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 16px 24px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        header h1 {
+            font-size: 26px;
+            font-weight: 800;
+            background: linear-gradient(90deg, #38bdf8, #818cf8, #f43f5e);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+        }
+        header p {
+            font-size: 13px;
+            color: #94a3b8;
+            margin-top: 4px;
+            font-weight: 500;
+        }
+
+        /* Main Grid */
+        .main-layout {
+            display: grid;
+            grid-template-columns: 360px 1fr;
+            gap: 24px;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* Sidebar Control Panel */
+        .sidebar {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .sidebar h2 {
+            font-size: 17px;
+            font-weight: 700;
+            color: #f8fafc;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 12px;
+        }
+
+        .control-item {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .control-item label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #cbd5e1;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .control-item label span {
+            color: #38bdf8;
+            font-weight: 700;
+            background: rgba(56, 189, 248, 0.1);
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+        }
+
+        select, input[type="number"] {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #f8fafc;
+            padding: 10px 14px;
+            border-radius: 12px;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        select:focus, input[type="number"]:focus {
+            border-color: #38bdf8;
+            box-shadow: 0 0 12px rgba(56, 189, 248, 0.3);
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #334155;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #38bdf8;
+            cursor: pointer;
+            box-shadow: 0 0 10px #38bdf8;
+            transition: transform 0.1s;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+
+        /* Preset Buttons */
+        .ball-presets {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .preset-btn {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 10px 6px;
+            color: #94a3b8;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.2s;
+        }
+
+        .preset-btn span { font-size: 20px; }
+
+        .preset-btn:hover, .preset-btn.active {
+            background: rgba(56, 189, 248, 0.2);
+            border-color: #38bdf8;
+            color: #38bdf8;
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.2);
+        }
+
+        .btn-launch {
+            background: linear-gradient(135deg, #06b6d4, #3b82f6);
+            color: white;
+            border: none;
+            padding: 16px;
+            border-radius: 14px;
+            font-size: 17px;
+            font-weight: 800;
+            cursor: pointer;
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+            transition: all 0.2s;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-launch:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(59, 130, 246, 0.6);
+            background: linear-gradient(135deg, #22d3ee, #60a5fa);
+        }
+
+        .btn-launch:active { transform: translateY(0); }
+
+        /* Viewport / Simulation Area */
+        .viewport {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .canvas-card {
+            position: relative;
+            width: 100%;
+            height: 480px;
+            border-radius: 24px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        /* Overlay UI Elements */
+        .stadium-badge {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(8px);
+            padding: 8px 16px;
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 13px;
+            font-weight: 700;
+            color: #f8fafc;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .legend-box {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(10px);
+            padding: 12px 18px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .dot-real {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #00f2fe;
+            box-shadow: 0 0 10px #00f2fe;
+        }
+
+        .dot-ideal {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #ff416c;
+            box-shadow: 0 0 10px #ff416c;
+        }
+
+        /* Telemetry Dashboard Cards */
+        .telemetry-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+        }
+
+        .tele-card {
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 18px;
+            padding: 16px;
+            text-align: center;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            transition: transform 0.2s;
+        }
+
+        .tele-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(56, 189, 248, 0.3);
+        }
+
+        .tele-title {
+            font-size: 12px;
+            color: #94a3b8;
+            font-weight: 600;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .tele-value {
+            font-size: 22px;
+            font-weight: 800;
+            color: #38bdf8;
+            text-shadow: 0 0 12px rgba(56, 189, 248, 0.3);
+        }
+
+        .tele-value.drag {
+            color: #fb7185;
+            text-shadow: 0 0 12px rgba(251, 113, 133, 0.3);
+        }
+
+        @media (max-width: 1024px) {
+            .main-layout { grid-template-columns: 1fr; }
+            .telemetry-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>🏟️ Real-Time Physics Stadium Simulator</h1>
+        <p>수치해석(Euler Method) 기반 공기저항 & 3D 그라디언트 경기장 물리 시뮬레이션</p>
+    </header>
+
+    <div class="main-layout">
+        <!-- Sidebar Controls -->
+        <div class="sidebar">
+            <h2>⚙️ 발사 제어 패널</h2>
+
+            <div class="control-item">
+                <label>공 선택 (Ball Presets)</label>
+                <div class="ball-presets">
+                    <button class="preset-btn active" onclick="setBall('pingpong', this)">
+                        <span>🏓</span>탁구공
+                    </button>
+                    <button class="preset-btn" onclick="setBall('baseball', this)">
+                        <span>⚾</span>야구공
+                    </button>
+                    <button class="preset-btn" onclick="setBall('basketball', this)">
+                        <span>🏀</span>농구공
+                    </button>
+                </div>
+            </div>
+
+            <div class="control-item">
+                <label>초기 발사 속도 v₀ <span id="val-v0">18.0 m/s</span></label>
+                <input type="range" id="v0" min="5" max="50" value="18" step="0.5" oninput="updateUI()">
+            </div>
+
+            <div class="control-item">
+                <label>발사 각도 θ <span id="val-angle">45°</span></label>
+                <input type="range" id="angle" min="10" max="85" value="45" step="1" oninput="updateUI()">
+            </div>
+
+            <div class="control-item">
+                <label>물체 질량 m <span id="val-m">0.0027 kg</span></label>
+                <input type="range" id="mass" min="0.001" max="1.0" value="0.0027" step="0.001" oninput="updateUI('custom')">
+            </div>
+
+            <div class="control-item">
+                <label>물체 반지름 r <span id="val-r">0.020 m</span></label>
+                <input type="range" id="radius" min="0.005" max="0.15" value="0.02" step="0.001" oninput="updateUI('custom')">
+            </div>
+
+            <div class="control-item">
+                <label>항력 계수 C_d <span id="val-cd">0.47</span></label>
+                <input type="range" id="cd" min="0.1" max="1.0" value="0.47" step="0.01" oninput="updateUI('custom')">
+            </div>
+
+            <button class="btn-launch" onclick="launchBall()">
+                <span>🚀</span> 시뮬레이션 발사!
+            </button>
+        </div>
+
+        <!-- Simulation Screen & Telemetry -->
+        <div class="viewport">
+            <div class="canvas-card">
+                <canvas id="simCanvas"></canvas>
+
+                <div class="stadium-badge">
+                    <span>🏟️</span> Grand Physics Stadium
+                </div>
+
+                <div class="legend-box">
+                    <div class="legend-item"><span class="dot-real"></span> 실제 공 (공기저항)</div>
+                    <div class="legend-item"><span class="dot-ideal"></span> 이상적 공 (진공)</div>
+                </div>
+            </div>
+
+            <!-- Telemetry Cards -->
+            <div class="telemetry-grid">
+                <div class="tele-card">
+                    <div class="tele-title">⏱️ 총 체류 시간</div>
+                    <div class="tele-value" id="stat-time">0.00 s</div>
+                </div>
+                <div class="tele-card">
+                    <div class="tele-title">📏 최대 도달 거리</div>
+                    <div class="tele-value" id="stat-dist">0.00 m</div>
+                </div>
+                <div class="tele-card">
+                    <div class="tele-title">🏔️ 최고 높이</div>
+                    <div class="tele-value" id="stat-height">0.00 m</div>
+                </div>
+                <div class="tele-card">
+                    <div class="tele-title">💨 최대 공기저항력</div>
+                    <div class="tele-value drag" id="stat-drag">0.0000 N</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('simCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let currentEmoji = '🏓';
+
+        function resizeCanvas() {
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        function setBall(type, btn) {
+            document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            if(type === 'pingpong') {
+                document.getElementById('mass').value = 0.0027;
+                document.getElementById('radius').value = 0.020;
+                document.getElementById('cd').value = 0.47;
+                currentEmoji = '🏓';
+            } else if(type === 'baseball') {
+                document.getElementById('mass').value = 0.145;
+                document.getElementById('radius').value = 0.037;
+                document.getElementById('cd').value = 0.30;
+                currentEmoji = '⚾';
+            } else if(type === 'basketball') {
+                document.getElementById('mass').value = 0.620;
+                document.getElementById('radius').value = 0.120;
+                document.getElementById('cd').value = 0.50;
+                currentEmoji = '🏀';
+            }
+            updateUI();
+        }
+
+        function updateUI(mode) {
+            if(mode === 'custom') {
+                document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+                currentEmoji = '⚽';
+            }
+            document.getElementById('val-v0').innerText = parseFloat(document.getElementById('v0').value).toFixed(1) + ' m/s';
+            document.getElementById('val-angle').innerText = document.getElementById('angle').value + '°';
+            document.getElementById('val-m').innerText = parseFloat(document.getElementById('mass').value).toFixed(4) + ' kg';
+            document.getElementById('val-r').innerText = parseFloat(document.getElementById('radius').value).toFixed(3) + ' m';
+            document.getElementById('val-cd').innerText = document.getElementById('cd').value;
+        }
+
+        let animId = null;
+
+        function launchBall() {
+            if(animId) cancelAnimationFrame(animId);
+
+            const v0 = parseFloat(document.getElementById('v0').value);
+            const angle = parseFloat(document.getElementById('angle').value);
+            const m = parseFloat(document.getElementById('mass').value);
+            const r = parseFloat(document.getElementById('radius').value);
+            const Cd = parseFloat(document.getElementById('cd').value);
+
+            const g = 9.81;
+            const rho = 1.225;
+            const A = Math.PI * r * r;
+            const b = 0.5 * Cd * rho * A;
+            const rad = angle * Math.PI / 180;
+
+            // 1. Euler Numerical Method Calculation
+            let dt = 0.004;
+            let realPath = [];
+            let rx = 0, ry = 0;
+            let rvx = v0 * Math.cos(rad);
+            let rvy = v0 * Math.sin(rad);
+            let maxH = 0, maxFd = 0;
+
+            while (ry >= 0) {
+                let v = Math.sqrt(rvx * rvx + rvy * rvy);
+                let Fd = b * v * v;
+                if(Fd > maxFd) maxFd = Fd;
+
+                let ax = -(b / m) * v * rvx;
+                let ay = -g - (b / m) * v * rvy;
+
+                rvx += ax * dt;
+                rvy += ay * dt;
+                rx += rvx * dt;
+                ry += rvy * dt;
+
+                if(ry > maxH) maxH = ry;
+                if(ry >= 0) realPath.push({x: rx, y: ry, v: v, drag: Fd});
+            }
+
+            // Ideal Path (Vacuum)
+            let idealPath = [];
+            let tVacTotal = (2 * v0 * Math.sin(rad)) / g;
+            for(let t = 0; t <= tVacTotal; t += dt * 2) {
+                let ix = v0 * Math.cos(rad) * t;
+                let iy = v0 * Math.sin(rad) * t - 0.5 * g * t * t;
+                if(iy >= 0) idealPath.push({x: ix, y: iy});
+            }
+
+            // Update Telemetry
+            document.getElementById('stat-time').innerText = (realPath.length * dt).toFixed(2) + ' s';
+            document.getElementById('stat-dist').innerText = rx.toFixed(2) + ' m';
+            document.getElementById('stat-height').innerText = maxH.toFixed(2) + ' m';
+            document.getElementById('stat-drag').innerText = maxFd.toFixed(4) + ' N';
+
+            // Animation Settings
+            let step = 0;
+            const startX = 60;
+            const startY = canvas.height - 70;
+            const scale = Math.min((canvas.width - 120) / Math.max(rx, (v0*v0/g)), (canvas.height - 140) / (maxH + 1));
+
+            function drawFrame() {
+                // Background Sky (Sunset / Twilight Gradient)
+                let skyGrad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+                skyGrad.addColorStop(0, '#0f172a');
+                skyGrad.addColorStop(0.5, '#1e1b4b');
+                skyGrad.addColorStop(0.8, '#312e81');
+                skyGrad.addColorStop(1, '#4338ca');
+                ctx.fillStyle = skyGrad;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                // Sun / Light Glow
+                let sunGrad = ctx.createRadialGradient(canvas.width - 150, 100, 10, canvas.width - 150, 100, 180);
+                sunGrad.addColorStop(0, 'rgba(251, 146, 60, 0.4)');
+                sunGrad.addColorStop(1, 'rgba(251, 146, 60, 0)');
+                ctx.fillStyle = sunGrad;
+                ctx.beginPath();
+                ctx.arc(canvas.width - 150, 100, 180, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Stadium Lighting Field Ground (Grass Texture)
+                let groundY = canvas.height - 70;
+                let grassGrad = ctx.createLinearGradient(0, groundY, 0, canvas.height);
+                grassGrad.addColorStop(0, '#15803d');
+                grassGrad.addColorStop(0.2, '#166534');
+                grassGrad.addColorStop(1, '#052e16');
+                ctx.fillStyle = grassGrad;
+                ctx.fillRect(0, groundY, canvas.width, 70);
+
+                // Lawn Stripes
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
+                for(let i = 0; i < canvas.width; i += 60) {
+                    ctx.fillRect(i, groundY, 30, 70);
+                }
+
+                // Field Yard Lines
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(0, groundY);
+                ctx.lineTo(canvas.width, groundY);
+                ctx.stroke();
+
+                // Distance Marker Flags
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+                ctx.font = '11px sans-serif';
+                ctx.textAlign = 'center';
+                let stepDist = Math.max(5, Math.round((rx / 5) / 5) * 5);
+                for(let dist = 0; dist <= rx * 1.2; dist += stepDist) {
+                    let flagX = startX + dist * scale;
+                    if(flagX < canvas.width - 20) {
+                        ctx.fillRect(flagX, groundY - 10, 2, 10);
+                        ctx.fillText(dist + 'm', flagX, groundY + 20);
+                    }
+                }
+
+                // Launcher Base
+                ctx.fillStyle = '#64748b';
+                ctx.fillRect(startX - 20, groundY - 15, 40, 15);
+
+                // Cannon Barrel (Angle Indicator)
+                ctx.save();
+                ctx.translate(startX, groundY - 10);
+                ctx.rotate(-rad);
+                ctx.fillStyle = '#38bdf8';
+                ctx.fillRect(0, -6, 35, 12);
+                ctx.restore();
+
+                // 1) Ideal Trajectory (Red Neon Glow)
+                ctx.beginPath();
+                ctx.setLineDash([6, 6]);
+                ctx.strokeStyle = '#ff416c';
+                ctx.lineWidth = 2.5;
+                ctx.shadowColor = '#ff416c';
+                ctx.shadowBlur = 8;
+                for(let i = 0; i < idealPath.length; i++) {
+                    let cx = startX + idealPath[i].x * scale;
+                    let cy = groundY - idealPath[i].y * scale;
+                    if(i === 0) ctx.moveTo(cx, cy);
+                    else ctx.lineTo(cx, cy);
+                }
+                ctx.stroke();
+                ctx.setLineDash([]);
+                ctx.shadowBlur = 0;
+
+                // 2) Real Trajectory (Cyan Neon Trace)
+                let currentIdx = Math.min(step, realPath.length - 1);
+                ctx.beginPath();
+                ctx.strokeStyle = '#00f2fe';
+                ctx.lineWidth = 4;
+                ctx.shadowColor = '#00f2fe';
+                ctx.shadowBlur = 12;
+                for(let i = 0; i <= currentIdx; i++) {
+                    let cx = startX + realPath[i].x * scale;
+                    let cy = groundY - realPath[i].y * scale;
+                    if(i === 0) ctx.moveTo(cx, cy);
+                    else ctx.lineTo(cx, cy);
+                }
+                ctx.stroke();
+                ctx.shadowBlur = 0;
+
+                // 3) Animated Ball with Emoji Icon & Glow
+                let curr = realPath[currentIdx];
+                let ballX = startX + curr.x * scale;
+                let ballY = groundY - curr.y * scale;
+
+                // Ball Light Aura
+                let ballGlow = ctx.createRadialGradient(ballX, ballY, 2, ballX, ballY, 20);
+                ballGlow.addColorStop(0, 'rgba(56, 189, 248, 0.8)');
+                ballGlow.addColorStop(1, 'rgba(56, 189, 248, 0)');
+                ctx.fillStyle = ballGlow;
+                ctx.beginPath();
+                ctx.arc(ballX, ballY, 20, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Emoji Ball Draw
+                ctx.font = '22px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(currentEmoji, ballX, ballY);
+
+                if(step < realPath.length - 1) {
+                    step += 3;
+                    animId = requestAnimationFrame(drawFrame);
+                }
+            }
+
+            drawFrame();
+        }
+
+        window.onload = function() {
+            updateUI();
+            launchBall();
+        };
+    </script>
+</body>
+</html>
