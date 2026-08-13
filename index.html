@@ -3,65 +3,180 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>공기저항을 고려한 포물선 운동 시뮬레이터</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>Physics Lab: 포물선 운동 시뮬레이터</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f5f5f7; }
-        .container { max-width: 900px; margin: 0 auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; background: #f0f2f5; padding: 15px; border-radius: 8px; }
-        .control-group { display: flex; flex-direction: column; }
-        label { font-weight: bold; margin-bottom: 5px; font-size: 14px; }
-        input { padding: 6px; border: 1px solid #ccc; border-radius: 4px; }
-        button { grid-column: span 2; padding: 12px; background: #007aff; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 16px; }
-        button:hover { background: #0056b3; }
-        .results { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; text-align: center; }
-        .card { background: #e9ecef; padding: 10px; border-radius: 6px; }
-        .card-title { font-size: 12px; color: #6c757d; }
-        .card-value { font-size: 18px; font-weight: bold; color: #1d1d1f; }
-        canvas { max-width: 100%; margin-top: 15px; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Pretendard', -apple-system, sans-serif; }
+        body { background: #0f172a; color: #f8fafc; padding: 20px; min-height: 100vh; display: flex; flex-direction: column; }
+        header { text-align: center; margin-bottom: 20px; }
+        header h1 { font-size: 24px; color: #38bdf8; text-shadow: 0 0 10px rgba(56, 189, 248, 0.4); }
+        header p { font-size: 13px; color: #94a3b8; margin-top: 5px; }
+
+        .main-layout { display: flex; gap: 20px; flex: 1; max-width: 1280px; margin: 0 auto; width: 100%; }
+        
+        /* 좌측 컨트롤 패널 */
+        .sidebar { width: 340px; background: #1e293b; padding: 20px; border-radius: 16px; border: 1px solid #334155; display: flex; flex-direction: column; gap: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+        .sidebar h2 { font-size: 16px; color: #f1f5f9; border-bottom: 2px solid #38bdf8; padding-bottom: 8px; margin-bottom: 5px; }
+        
+        .input-group { display: flex; flex-direction: column; gap: 6px; }
+        .input-group label { font-size: 13px; color: #cbd5e1; font-weight: 600; display: flex; justify-content: space-between; }
+        .input-group label span { color: #38bdf8; font-weight: bold; }
+        .input-group input[type="range"] { width: 100%; accent-color: #38bdf8; cursor: pointer; }
+        .input-group select, .input-group input[type="number"] { background: #0f172a; border: 1px solid #475569; color: #f8fafc; padding: 8px 12px; border-radius: 8px; font-size: 13px; }
+
+        .btn-launch { background: linear-gradient(135deg, #0284c7, #2563eb); color: white; border: none; padding: 14px; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4); margin-top: 10px; }
+        .btn-launch:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(37, 99, 235, 0.6); }
+        .btn-launch:active { transform: translateY(0); }
+
+        /* 우측 게임 Canvas 패널 */
+        .viewport { flex: 1; display: flex; flex-direction: column; gap: 15px; }
+        .canvas-container { position: relative; width: 100%; height: 420px; background: #0284c7; border-radius: 16px; overflow: hidden; border: 2px solid #334155; box-shadow: inset 0 0 20px rgba(0,0,0,0.3); }
+        canvas { width: 100%; height: 100%; display: block; }
+
+        /* 실시간 스탯 카운터 */
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+        .stat-card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 12px; text-align: center; }
+        .stat-label { font-size: 11px; color: #94a3b8; margin-bottom: 4px; }
+        .stat-value { font-size: 18px; font-weight: bold; color: #38bdf8; }
+        .stat-value.drag { color: #f43f5e; }
+
+        .legend { position: absolute; top: 15px; right: 15px; background: rgba(15, 23, 42, 0.85); padding: 10px 14px; border-radius: 8px; font-size: 12px; display: flex; flex-direction: column; gap: 6px; backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.1); }
+        .legend-item { display: flex; align-items: center; gap: 8px; }
+        .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+        .dot.real { background: #38bdf8; box-shadow: 0 0 8px #38bdf8; }
+        .dot.ideal { background: #ef4444; }
+
+        @media (max-width: 900px) {
+            .main-layout { flex-direction: column; }
+            .sidebar { width: 100%; }
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h2>🚀 공기저항 고려 포물선 운동 수치해석 시뮬레이터</h2>
-        <div class="controls">
-            <div class="control-group">
-                <label>초기 속도 v0 (m/s):</label>
-                <input type="number" id="v0" value="12" step="0.5">
+
+    <header>
+        <h1>⚽ Physics Lab: 공기저항 포물선 운동 게임 시뮬레이터</h1>
+        <p>수치해석(Euler Method) 기반 공기저항과 진공 상태 궤적 정량 비교 시스템</p>
+    </header>
+
+    <div class="main-layout">
+        <!-- 좌측 컨트롤 바 -->
+        <div class="sidebar">
+            <h2>🎮 물리 변수 컨트롤러</h2>
+            
+            <div class="input-group">
+                <label>공 종류 프리셋</label>
+                <select id="preset" onchange="applyPreset()">
+                    <option value="pingpong">탁구공 (질량 2.7g / 반지름 2cm)</option>
+                    <option value="baseball">야구공 (질량 145g / 반지름 3.7cm)</option>
+                    <option value="basketball">농구공 (질량 620g / 반지름 12cm)</option>
+                    <option value="custom">직접 설정 (Custom)</option>
+                </select>
             </div>
-            <div class="control-group">
-                <label>발사 각도 θ (°):</label>
-                <input type="number" id="angle" value="42" step="1">
+
+            <div class="input-group">
+                <label>초기 발사 속도 v₀ <span id="val-v0">15 m/s</span></label>
+                <input type="range" id="v0" min="5" max="40" value="15" step="0.5" oninput="updateVal()">
             </div>
-            <div class="control-group">
-                <label>물체 질량 m (kg) [탁구공 0.0027]:</label>
-                <input type="number" id="mass" value="0.0027" step="0.0001">
+
+            <div class="input-group">
+                <label>발사 각도 θ <span id="val-angle">42°</span></label>
+                <input type="range" id="angle" min="10" max="80" value="42" step="1" oninput="updateVal()">
             </div>
-            <div class="control-group">
-                <label>물체 반지름 r (m) [탁구공 0.02]:</label>
-                <input type="number" id="radius" value="0.02" step="0.001">
+
+            <div class="input-group">
+                <label>물체 질량 m <span id="val-m">0.0027 kg</span></label>
+                <input type="range" id="mass" min="0.001" max="1.0" value="0.0027" step="0.001" oninput="updateVal('custom')">
             </div>
-            <div class="control-group">
-                <label>항력 계수 Cd [구형 0.47]:</label>
-                <input type="number" id="cd" value="0.47" step="0.01">
+
+            <div class="input-group">
+                <label>물체 반지름 r <span id="val-r">0.020 m</span></label>
+                <input type="range" id="radius" min="0.005" max="0.15" value="0.02" step="0.001" oninput="updateVal('custom')">
             </div>
-            <button onclick="runSimulation()">시뮬레이션 실행하기</button>
+
+            <div class="input-group">
+                <label>항력 계수 C_d <span id="val-cd">0.47</span></label>
+                <input type="range" id="cd" min="0.1" max="1.0" value="0.47" step="0.01" oninput="updateVal('custom')">
+            </div>
+
+            <button class="btn-launch" onclick="startSimulation()">🚀 공 던지기 (Launch!)</button>
         </div>
 
-        <div class="results">
-            <div class="card"><div class="card-title">총 체류 시간</div><div class="card-value" id="resTime">-</div></div>
-            <div class="card"><div class="card-title">최대 도달 거리</div><div class="card-value" id="resDist">-</div></div>
-            <div class="card"><div class="card-title">최고 높이</div><div class="card-value" id="resHeight">-</div></div>
-            <div class="card"><div class="card-title">최대 공기저항력</div><div class="card-value" id="resDrag">-</div></div>
-        </div>
+        <!-- 우측 시뮬레이션 게임 화면 -->
+        <div class="viewport">
+            <div class="canvas-container">
+                <canvas id="simCanvas"></canvas>
+                <div class="legend">
+                    <div class="legend-item"><span class="dot real"></span> 실제 공 (공기저항 존재)</div>
+                    <div class="legend-item"><span class="dot ideal"></span> 이상적 공 (진공 상태)</div>
+                </div>
+            </div>
 
-        <canvas id="trajectoryChart"></canvas>
+            <!-- 스탯 대시보드 -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">⏱️ 총 체류 시간</div>
+                    <div class="stat-value" id="stat-time">0.00 s</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">📏 최대 도달 거리</div>
+                    <div class="stat-value" id="stat-dist">0.00 m</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">🏔️ 최고 높이</div>
+                    <div class="stat-value" id="stat-height">0.00 m</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">💨 최대 공기저항력</div>
+                    <div class="stat-value drag" id="stat-drag">0.0000 N</div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
-        let chartInstance = null;
+        const canvas = document.getElementById('simCanvas');
+        const ctx = canvas.getContext('2d');
 
-        function runSimulation() {
+        function resizeCanvas() {
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // 슬라이더 값 화면 업데이트
+        function updateVal(type) {
+            if(type === 'custom') document.getElementById('preset').value = 'custom';
+            document.getElementById('val-v0').innerText = document.getElementById('v0').value + ' m/s';
+            document.getElementById('val-angle').innerText = document.getElementById('angle').value + '°';
+            document.getElementById('val-m').innerText = parseFloat(document.getElementById('mass').value).toFixed(4) + ' kg';
+            document.getElementById('val-r').innerText = parseFloat(document.getElementById('radius').value).toFixed(3) + ' m';
+            document.getElementById('val-cd').innerText = document.getElementById('cd').value;
+        }
+
+        function applyPreset() {
+            const p = document.getElementById('preset').value;
+            if(p === 'pingpong') {
+                document.getElementById('mass').value = 0.0027;
+                document.getElementById('radius').value = 0.020;
+                document.getElementById('cd').value = 0.47;
+            } else if(p === 'baseball') {
+                document.getElementById('mass').value = 0.145;
+                document.getElementById('radius').value = 0.037;
+                document.getElementById('cd').value = 0.30;
+            } else if(p === 'basketball') {
+                document.getElementById('mass').value = 0.620;
+                document.getElementById('radius').value = 0.120;
+                document.getElementById('cd').value = 0.50;
+            }
+            updateVal();
+        }
+
+        let animId = null;
+
+        function startSimulation() {
+            if(animId) cancelAnimationFrame(animId);
+
             const v0 = parseFloat(document.getElementById('v0').value);
             const angle = parseFloat(document.getElementById('angle').value);
             const m = parseFloat(document.getElementById('mass').value);
@@ -72,98 +187,131 @@
             const rho = 1.225;
             const A = Math.PI * r * r;
             const b = 0.5 * Cd * rho * A;
-
             const rad = angle * Math.PI / 180;
-            let x = 0, y = 0;
-            let vx = v0 * Math.cos(rad);
-            let vy = v0 * Math.sin(rad);
 
-            let dt = 0.005; // 오일러 방법 시간 간격
-            let t = 0;
+            // 1. 미리 전체 수치해석 궤적 계산
+            let dt = 0.005;
+            let realPath = [{x: 0, y: 0, v: v0, drag: 0}];
+            let rx = 0, ry = 0;
+            let rvx = v0 * Math.cos(rad);
+            let rvy = v0 * Math.sin(rad);
+            let maxH = 0, maxFd = 0;
 
-            let realX = [0], realY = [0];
-            let maxH = 0;
-            let maxDrag = 0;
-
-            // 오일러 수치해석 루프
-            while (y >= 0) {
-                let v = Math.sqrt(vx * vx + vy * vy);
+            while (ry >= 0) {
+                let v = Math.sqrt(rvx*rvx + rvy*rvy);
                 let Fd = b * v * v;
-                if (Fd > maxDrag) maxDrag = Fd;
+                if(Fd > maxFd) maxFd = Fd;
 
-                let ax = -(b / m) * v * vx;
-                let ay = -g - (b / m) * v * vy;
+                let ax = -(b / m) * v * rvx;
+                let ay = -g - (b / m) * v * rvy;
 
-                vx += ax * dt;
-                vy += ay * dt;
-                x += vx * dt;
-                y += vy * dt;
-                t += dt;
+                rvx += ax * dt;
+                rvy += ay * dt;
+                rx += rvx * dt;
+                ry += rvy * dt;
 
-                if (y > maxH) maxH = y;
-
-                if (y >= 0) {
-                    realX.push(x);
-                    realY.push(y);
-                }
+                if(ry > maxH) maxH = ry;
+                if(ry >= 0) realPath.push({x: rx, y: ry, v: v, drag: Fd});
             }
 
-            // 진공 상태 비교 데이터
-            let idealX = [], idealY = [];
+            // 진공 궤적
+            let idealPath = [];
             let tVacTotal = (2 * v0 * Math.sin(rad)) / g;
-            for (let tv = 0; tv <= tVacTotal; tv += dt) {
-                let ix = v0 * Math.cos(rad) * tv;
-                let iy = v0 * Math.sin(rad) * tv - 0.5 * g * tv * tv;
-                if (iy >= 0) {
-                    idealX.push(ix);
-                    idealY.push(iy);
+            for(let t=0; t<=tVacTotal; t+=dt*2) {
+                let ix = v0 * Math.cos(rad) * t;
+                let iy = v0 * Math.sin(rad) * t - 0.5 * g * t * t;
+                if(iy >= 0) idealPath.push({x: ix, y: iy});
+            }
+
+            // 스탯 업데이트
+            document.getElementById('stat-time').innerText = (realPath.length * dt).toFixed(2) + ' s';
+            document.getElementById('stat-dist').innerText = rx.toFixed(2) + ' m';
+            document.getElementById('stat-height').innerText = maxH.toFixed(2) + ' m';
+            document.getElementById('stat-drag').innerText = maxFd.toFixed(4) + ' N';
+
+            // 2. 애니메이션 실행
+            let step = 0;
+            const scale = Math.min((canvas.width - 100) / Math.max(rx, v0*v0/g), (canvas.height - 100) / (maxH + 2));
+            const startX = 50;
+            const startY = canvas.height - 50;
+
+            function draw() {
+                // 배경 (하늘 + 운동장 잔디)
+                ctx.fillStyle = '#38bdf8';
+                ctx.fillRect(0, 0, canvas.width, canvas.height - 50);
+                
+                // 구름 장식
+                ctx.fillStyle = 'rgba(255,255,255,0.7)';
+                ctx.beginPath();
+                ctx.arc(100, 80, 25, 0, Math.PI*2);
+                ctx.arc(130, 70, 35, 0, Math.PI*2);
+                ctx.arc(160, 80, 25, 0, Math.PI*2);
+                ctx.fill();
+
+                // 잔디밭
+                ctx.fillStyle = '#22c55e';
+                ctx.fillRect(0, canvas.height - 50, canvas.width, 50);
+                ctx.fillStyle = '#15803d';
+                ctx.fillRect(0, canvas.height - 50, canvas.width, 6);
+
+                // 대포 / 던지는 사람 위치 표시
+                ctx.fillStyle = '#475569';
+                ctx.fillRect(startX - 15, startY - 20, 30, 20);
+
+                // 1) 이상적 궤적 점선 (빨간색)
+                ctx.beginPath();
+                ctx.setLineDash([4, 4]);
+                ctx.strokeStyle = '#ef4444';
+                ctx.lineWidth = 2;
+                for(let i=0; i<idealPath.length; i++) {
+                    let cx = startX + idealPath[i].x * scale;
+                    let cy = startY - idealPath[i].y * scale;
+                    if(i===0) ctx.moveTo(cx, cy);
+                    else ctx.lineTo(cx, cy);
+                }
+                ctx.stroke();
+                ctx.setLineDash([]);
+
+                // 2) 실제 공 궤적 선 (파란색)
+                ctx.beginPath();
+                ctx.strokeStyle = '#0284c7';
+                ctx.lineWidth = 4;
+                let currentIdx = Math.min(step, realPath.length - 1);
+                for(let i=0; i<=currentIdx; i++) {
+                    let cx = startX + realPath[i].x * scale;
+                    let cy = startY - realPath[i].y * scale;
+                    if(i===0) ctx.moveTo(cx, cy);
+                    else ctx.lineTo(cx, cy);
+                }
+                ctx.stroke();
+
+                // 3) 공 그리기 (애니메이션 위치)
+                let curr = realPath[currentIdx];
+                let ballX = startX + curr.x * scale;
+                let ballY = startY - curr.y * scale;
+
+                ctx.beginPath();
+                ctx.arc(ballX, ballY, Math.max(6, r * scale * 2), 0, Math.PI * 2);
+                ctx.fillStyle = '#0ea5e9';
+                ctx.shadowColor = '#0284c7';
+                ctx.shadowBlur = 10;
+                ctx.fill();
+                ctx.shadowBlur = 0;
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                if(step < realPath.length - 1) {
+                    step += 2; // 애니메이션 속도 조절
+                    animId = requestAnimationFrame(draw);
                 }
             }
 
-            // 결과 도출
-            document.getElementById('resTime').innerText = t.toFixed(2) + " 초";
-            document.getElementById('resDist').innerText = x.toFixed(2) + " m";
-            document.getElementById('resHeight').innerText = maxH.toFixed(2) + " m";
-            document.getElementById('resDrag').innerText = maxDrag.toFixed(4) + " N";
-
-            // Chart.js 그래프 그리기
-            const ctx = document.getElementById('trajectoryChart').getContext('2d');
-            if (chartInstance) chartInstance.destroy();
-
-            chartInstance = new Chart(ctx, {
-                type: 'scatter',
-                data: {
-                    datasets: [
-                        {
-                            label: '공기저항 존재 (실제 궤적)',
-                            data: realX.map((val, i) => ({ x: val, y: realY[i] })),
-                            showLine: true,
-                            borderColor: '#007aff',
-                            backgroundColor: 'transparent',
-                            borderWidth: 2
-                        },
-                        {
-                            label: '진공 상태 (이상적 궤적)',
-                            data: idealX.map((val, i) => ({ x: val, y: idealY[i] })),
-                            showLine: true,
-                            borderColor: '#ff3b30',
-                            backgroundColor: 'transparent',
-                            borderDash: [5, 5],
-                            borderWidth: 1.5
-                        }
-                    ]
-                },
-                options: {
-                    scales: {
-                        x: { title: { display: true, text: '거리 X (m)' }, min: 0 },
-                        y: { title: { display: true, text: '높이 Y (m)' }, min: 0 }
-                    }
-                }
-            });
+            draw();
         }
 
-        // 페이지 로드 시 최초 1회 자동 실행
-        window.onload = runSimulation;
+        // 초기 화면 그리기
+        startSimulation();
     </script>
 </body>
 </html>
