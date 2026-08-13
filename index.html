@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>공기저항을 고려한 포물선 운동 시뮬레이터</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f5f5f7; }
+        .container { max-width: 900px; margin: 0 auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; background: #f0f2f5; padding: 15px; border-radius: 8px; }
+        .control-group { display: flex; flex-direction: column; }
+        label { font-weight: bold; margin-bottom: 5px; font-size: 14px; }
+        input { padding: 6px; border: 1px solid #ccc; border-radius: 4px; }
+        button { grid-column: span 2; padding: 12px; background: #007aff; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 16px; }
+        button:hover { background: #0056b3; }
+        .results { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; text-align: center; }
+        .card { background: #e9ecef; padding: 10px; border-radius: 6px; }
+        .card-title { font-size: 12px; color: #6c757d; }
+        .card-value { font-size: 18px; font-weight: bold; color: #1d1d1f; }
+        canvas { max-width: 100%; margin-top: 15px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>🚀 공기저항 고려 포물선 운동 수치해석 시뮬레이터</h2>
+        <div class="controls">
+            <div class="control-group">
+                <label>초기 속도 v0 (m/s):</label>
+                <input type="number" id="v0" value="12" step="0.5">
+            </div>
+            <div class="control-group">
+                <label>발사 각도 θ (°):</label>
+                <input type="number" id="angle" value="42" step="1">
+            </div>
+            <div class="control-group">
+                <label>물체 질량 m (kg) [탁구공 0.0027]:</label>
+                <input type="number" id="mass" value="0.0027" step="0.0001">
+            </div>
+            <div class="control-group">
+                <label>물체 반지름 r (m) [탁구공 0.02]:</label>
+                <input type="number" id="radius" value="0.02" step="0.001">
+            </div>
+            <div class="control-group">
+                <label>항력 계수 Cd [구형 0.47]:</label>
+                <input type="number" id="cd" value="0.47" step="0.01">
+            </div>
+            <button onclick="runSimulation()">시뮬레이션 실행하기</button>
+        </div>
+
+        <div class="results">
+            <div class="card"><div class="card-title">총 체류 시간</div><div class="card-value" id="resTime">-</div></div>
+            <div class="card"><div class="card-title">최대 도달 거리</div><div class="card-value" id="resDist">-</div></div>
+            <div class="card"><div class="card-title">최고 높이</div><div class="card-value" id="resHeight">-</div></div>
+            <div class="card"><div class="card-title">최대 공기저항력</div><div class="card-value" id="resDrag">-</div></div>
+        </div>
+
+        <canvas id="trajectoryChart"></canvas>
+    </div>
+
+    <script>
+        let chartInstance = null;
+
+        function runSimulation() {
+            const v0 = parseFloat(document.getElementById('v0').value);
+            const angle = parseFloat(document.getElementById('angle').value);
+            const m = parseFloat(document.getElementById('mass').value);
+            const r = parseFloat(document.getElementById('radius').value);
+            const Cd = parseFloat(document.getElementById('cd').value);
+
+            const g = 9.81;
+            const rho = 1.225;
+            const A = Math.PI * r * r;
+            const b = 0.5 * Cd * rho * A;
+
+            const rad = angle * Math.PI / 180;
+            let x = 0, y = 0;
+            let vx = v0 * Math.cos(rad);
+            let vy = v0 * Math.sin(rad);
+
+            let dt = 0.005; // 오일러 방법 시간 간격
+            let t = 0;
+
+            let realX = [0], realY = [0];
+            let maxH = 0;
+            let maxDrag = 0;
+
+            // 오일러 수치해석 루프
+            while (y >= 0) {
+                let v = Math.sqrt(vx * vx + vy * vy);
+                let Fd = b * v * v;
+                if (Fd > maxDrag) maxDrag = Fd;
+
+                let ax = -(b / m) * v * vx;
+                let ay = -g - (b / m) * v * vy;
+
+                vx += ax * dt;
+                vy += ay * dt;
+                x += vx * dt;
+                y += vy * dt;
+                t += dt;
+
+                if (y > maxH) maxH = y;
+
+                if (y >= 0) {
+                    realX.push(x);
+                    realY.push(y);
+                }
+            }
+
+            // 진공 상태 비교 데이터
+            let idealX = [], idealY = [];
+            let tVacTotal = (2 * v0 * Math.sin(rad)) / g;
+            for (let tv = 0; tv <= tVacTotal; tv += dt) {
+                let ix = v0 * Math.cos(rad) * tv;
+                let iy = v0 * Math.sin(rad) * tv - 0.5 * g * tv * tv;
+                if (iy >= 0) {
+                    idealX.push(ix);
+                    idealY.push(iy);
+                }
+            }
+
+            // 결과 도출
+            document.getElementById('resTime').innerText = t.toFixed(2) + " 초";
+            document.getElementById('resDist').innerText = x.toFixed(2) + " m";
+            document.getElementById('resHeight').innerText = maxH.toFixed(2) + " m";
+            document.getElementById('resDrag').innerText = maxDrag.toFixed(4) + " N";
+
+            // Chart.js 그래프 그리기
+            const ctx = document.getElementById('trajectoryChart').getContext('2d');
+            if (chartInstance) chartInstance.destroy();
+
+            chartInstance = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [
+                        {
+                            label: '공기저항 존재 (실제 궤적)',
+                            data: realX.map((val, i) => ({ x: val, y: realY[i] })),
+                            showLine: true,
+                            borderColor: '#007aff',
+                            backgroundColor: 'transparent',
+                            borderWidth: 2
+                        },
+                        {
+                            label: '진공 상태 (이상적 궤적)',
+                            data: idealX.map((val, i) => ({ x: val, y: idealY[i] })),
+                            showLine: true,
+                            borderColor: '#ff3b30',
+                            backgroundColor: 'transparent',
+                            borderDash: [5, 5],
+                            borderWidth: 1.5
+                        }
+                    ]
+                },
+                options: {
+                    scales: {
+                        x: { title: { display: true, text: '거리 X (m)' }, min: 0 },
+                        y: { title: { display: true, text: '높이 Y (m)' }, min: 0 }
+                    }
+                }
+            });
+        }
+
+        // 페이지 로드 시 최초 1회 자동 실행
+        window.onload = runSimulation;
+    </script>
+</body>
+</html>
