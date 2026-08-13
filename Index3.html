@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pennes Bioheat Transfer Simulator</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #1e1e2f; color: #fff; margin: 20px; }
+        .container { display: flex; flex-wrap: wrap; gap: 20px; max-width: 1200px; margin: 0 auto; }
+        .panel { background-color: #2b2b40; padding: 20px; border-radius: 10px; flex: 1; min-width: 300px; }
+        canvas { background-color: #000; border-radius: 5px; cursor: crosshair; display: block; margin-top: 10px; }
+        .control-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input[type=range] { width: 100%; }
+        .value-display { font-size: 0.9em; color: #00d2ff; }
+        .btn { background: #00d2ff; color: #000; border: none; padding: 10px 15px; font-weight: bold; border-radius: 5px; cursor: pointer; margin-right: 10px; }
+        .btn:hover { background: #0099cc; }
+        .legend { display: flex; align-items: center; margin-top: 10px; gap: 5px; font-size: 0.8em; }
+        .legend-bar { flex-grow: 1; height: 15px; background: linear-gradient(to right, blue, cyan, green, yellow, red); border-radius: 3px; }
+    </style>
+</head>
+<body>
+
+<h2>🩸 인체 생체조직 열전달 (Pennes Bioheat) 시뮬레이터</h2>
+<p>열역학 제1법칙 및 Pennes 생체열 방정식을 기반으로 한 다층 생체조직 내 열확산 및 혈류 열수송 시뮬레이션</p>
+
+<div class="container">
+    <div class="panel" style="flex: 2;">
+        <canvas id="simCanvas" width="400" height="400"></canvas>
+        <div class="legend">
+            <span>20°C</span>
+            <div class="legend-bar"></div>
+            <span>50°C</span>
+        </div>
+        <p style="font-size: 0.85em; color: #aaa; margin-top: 5px;">* 화면을 클릭하면 해당 좌표의 실시간 온도를 관찰할 수 있습니다.</p>
+    </div>
+
+    <div class="panel">
+        <h3>⚙️ 조건 및 변수 제어</h3>
+        
+        <div class="control-group">
+            <label>혈류 관류율 (Blood Perfusion Rate, $w_b$)</label>
+            <input type="range" id="perfusion" min="0" max="0.02" step="0.001" value="0.005">
+            <span class="value-display" id="perfVal">0.005 1/s</span>
+        </div>
+
+        <div class="control-group">
+            <label>외부 열원 강도 (External Heat, $q_{ext}$)</label>
+            <input type="range" id="heatSource" min="0" max="50000" step="1000" value="20000">
+            <span class="value-display" id="heatVal">20000 W/m³</span>
+        </div>
+
+        <div class="control-group">
+            <label>혈액 공급 온도 ($T_a$)</label>
+            <input type="range" id="bloodTemp" min="30" max="40" step="0.5" value="37">
+            <span class="value-display" id="bloodTempVal">37.0 °C</span>
+        </div>
+
+        <div style="margin-top: 20px;">
+            <button class="btn" id="startBtn">일시정지</button>
+            <button class="btn" id="resetBtn" style="background:#ff4757; color:#fff;">초기화</button>
+        </div>
+
+        <hr style="border-color: #444; margin: 20px 0;">
+
+        <h3>📊 선택 위치 상태 정보</h3>
+        <p>선택 좌표: <span id="clickCoord" class="value-display">미선택</span></p>
+        <p>해당 영역 조직: <span id="tissueType" class="value-display">-</span></p>
+        <p>현재 온도: <span id="selectedTemp" class="value-display" style="font-size: 1.2em; font-weight: bold;">- °C</span></p>
+    </div>
+</div>
+
+<script>
+const N = 80; // Grid Resolution 80x80
+const canvas = document.getElementById('simCanvas');
+const ctx = canvas.getContext('2d');
+const cellSize = canvas.width / N;
+
+// Physical Parameters
+let dt = 0.1;
+let dx = 0.001; // 1mm per grid step (Total 8cm x 8cm tissue)
+
+let T = Array.from({ length: N }, () => new Float32Array(N).fill(37.0));
+let T_next = Array.from({ length: N }, () => new Float32Array(N).fill(37.0));
+
+let isRunning = true;
+let selectedX = -1, selectedY = -1;
+
+// Tissue Properties Map
+// 0: Skin, 1: Fat, 2: Muscle, 3: Vessel
+const properties = {
+    0: { k: 0.37, rhoC: 3.77e6, qm: 300, name: "피부층 (Skin)" },
+    1: { k: 0.21, rhoC: 1.67e6, qm: 300, name: "지방층 (Fat)" },
+    2: { k: 0.51, rhoC: 3.80e6, qm: 700, name: "근육층 (Muscle)" },
+    3: { k: 0.53, rhoC: 3.85e6, qm: 1000, name: "대혈관 (Major Vessel)" }
+};
+
+let tissueMap = Array.from({ length: N }, () => new Uint8Array(N));
+
+// Initialize Human Tissue Layer Structure
+for (let i = 0; i < N; i++) {
+    for (let j = 0; j < N; j++) {
+        if (i < 8) tissueMap[i][j] = 0;        // Top 8mm: Skin
+        else if (i < 20) tissueMap[i][j] = 1;  // Next 12mm: Fat
+        else tissueMap[i][j] = 2;              // Deep: Muscle
+        
+        // Major Blood Vessel Pass-through (Y: 45~50, X: Entire range)
+        if (i >= 45 && i <= 50) {
+            tissueMap[i][j] = 3;
+        }
+    }
+}
+
+// Controls
+const perfInput = document.getElementById('perfusion');
+const heatInput = document.getElementById('heatSource');
+const bloodTempInput = document.getElementById('bloodTemp');
+
+perfInput.oninput = () => document.getElementById('perfVal').innerText = perfInput.value + " 1/s";
+heatInput.oninput = () => document.getElementById('heatVal').innerText = heatInput.value + " W/m³";
+bloodTempInput.oninput = () => document.getElementById('bloodTempVal').innerText = bloodTempInput.value + " °C";
+
+// Pennes Bioheat FDM Solver Loop
+function updatePhysics() {
+    let wb = parseFloat(perfInput.value);
+    let q_ext = parseFloat(heatInput.value);
+    let Ta = parseFloat(bloodTempInput.value);
+    let cb = 3800; // Blood specific heat
+    let rhob = 1060; // Blood density
+
+    for (let i = 1; i < N - 1; i++) {
+        for (let j = 1; j < N - 1; j++) {
+            let type = tissueMap[i][j];
+            let prop = properties[type];
+            let alpha = prop.k / prop.rhoC;
+
+            // Heat Conduction (2D FDM Laplacian)
+            let d2T_dx2 = (T[i+1][j] - 2*T[i][j] + T[i-1][j]) / (dx * dx);
+            let d2T_dy2 = (T[i][j+1] - 2*T[i][j] + T[i][j-1]) / (dx * dx);
+            let conduction = alpha * (d2T_dx2 + d2T_dy2);
+
+            // Blood Perfusion Term (Pennes Model)
+            // Blood perfusion is especially dominant in muscle & vessel
+            let currentWb = (type === 3) ? wb * 5 : (type === 2 ? wb : wb * 0.1);
+            let perfusion = (currentWb * rhob * cb / prop.rhoC) * (Ta - T[i][j]);
+
+            // Metabolic Heat Generation
+            let metabolic = prop.qm / prop.rhoC;
+
+            // External Heat Source (Localized at Muscle region near vessel)
+            let external = 0;
+            if (i >= 55 && i <= 65 && j >= 30 && j <= 50) {
+                external = q_ext / prop.rhoC;
+            }
+
+            // Temperature Time Derivatives
+            T_next[i][j] = T[i][j] + dt * (conduction + perfusion + metabolic + external);
+        }
+    }
+
+    // Boundary Conditions (Top: Air Cooling, Bottom: Deep Body Temp 37C)
+    for (let j = 0; j < N; j++) {
+        T_next[0][j] = T_next[1][j] - 0.5; // Surface heat loss
+        T_next[N-1][j] = 37.0;             // Deep body core temp
+    }
+
+    // Swap Arrays
+    let temp = T;
+    T = T_next;
+    T_next = temp;
+}
+
+// Color Mapping (20°C: Blue -> 37°C: Green -> 50°C+: Red)
+function getColor(temp) {
+    let norm = Math.max(0, Math.min(1, (temp - 20) / 30));
+    let r = Math.floor(255 * Math.pow(norm, 2));
+    let g = Math.floor(255 * (1 - Math.abs(norm - 0.5) * 2));
+    let b = Math.floor(255 * Math.pow(1 - norm, 2));
+    return `rgb(${r},${g},${b})`;
+}
+
+function render() {
+    for (let i = 0; i < N; i++) {
+        for (let j = 0; j < N; j++) {
+            ctx.fillStyle = getColor(T[i][j]);
+            ctx.fillRect(j * cellSize, i * cellSize, cellSize, cellSize);
+        }
+    }
+
+    // Draw Blood Vessel Boundary Line
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.4)";
+    ctx.lineWidth = 1;
+    ctx.strokeRect(0, 45 * cellSize, canvas.width, 6 * cellSize);
+
+    // Draw Selected Point Highlight
+    if (selectedX !== -1 && selectedY !== -1) {
+        ctx.strokeStyle = "#ffffff";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(selectedY * cellSize, selectedX * cellSize, cellSize, cellSize);
+    }
+}
+
+function loop() {
+    if (isRunning) {
+        for(let step = 0; step < 5; step++) updatePhysics(); // Speed up calculation
+    }
+    render();
+
+    if (selectedX !== -1 && selectedY !== -1) {
+        document.getElementById('selectedTemp').innerText = T[selectedX][selectedY].toFixed(2) + " °C";
+    }
+
+    requestAnimationFrame(loop);
+}
+
+// User Click Event on Canvas
+canvas.addEventListener('click', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    let x = e.clientX - rect.left;
+    let y = e.clientY - rect.top;
+
+    selectedY = Math.floor(x / cellSize);
+    selectedX = Math.floor(y / cellSize);
+
+    let type = tissueMap[selectedX][selectedY];
+    document.getElementById('clickCoord').innerText = `(${selectedY}mm, ${selectedX}mm)`;
+    document.getElementById('tissueType').innerText = properties[type].name;
+});
+
+document.getElementById('startBtn').onclick = function() {
+    isRunning = !isRunning;
+    this.innerText = isRunning ? "일시정지" : "재개";
+};
+
+document.getElementById('resetBtn').onclick = function() {
+    for (let i = 0; i < N; i++) {
+        T[i].fill(37.0);
+        T_next[i].fill(37.0);
+    }
+};
+
+loop();
+</script>
+</body>
+</html>
