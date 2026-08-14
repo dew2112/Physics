@@ -17,7 +17,6 @@
             --neon-blue: #38bdf8;
             --neon-green: #34d399;
             --neon-red: #f43f5e;
-            --neon-amber: #fbbf24;
             --radius: 12px;
         }
 
@@ -26,20 +25,17 @@
 
         .dashboard { width: 100%; max-width: 1520px; display: flex; flex-direction: column; gap: 16px; }
 
-        /* Header */
-        header { background: var(--surface-dark); padding: 16px 24px; border-radius: var(--radius); border: 1px solid var(--border-dark); display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
-        .title-area h1 { font-size: 1.35rem; font-weight: 700; color: var(--text-main); letter-spacing: -0.01em; display: flex; align-items: center; gap: 8px; }
+        header { background: var(--surface-dark); padding: 16px 24px; border-radius: var(--radius); border: 1px solid var(--border-dark); display: flex; justify-content: space-between; align-items: center; }
+        .title-area h1 { font-size: 1.35rem; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 8px; }
         .title-area h1 span { color: var(--neon-blue); font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; background: rgba(56,189,248,0.1); padding: 2px 8px; border-radius: 4px; border: 1px solid rgba(56,189,248,0.2); }
         .title-area p { font-size: 0.8rem; color: var(--text-sub); margin-top: 3px; }
         
         .mode-selector { display: flex; background: #020617; padding: 4px; border-radius: 8px; border: 1px solid var(--border-dark); gap: 4px; }
         .mode-btn { border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 0.82rem; cursor: pointer; color: var(--text-sub); background: transparent; transition: 0.2s; }
-        .mode-btn.active { background: var(--card-dark); color: var(--neon-blue); border: 1px solid var(--border-dark); box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
+        .mode-btn.active { background: var(--card-dark); color: var(--neon-blue); border: 1px solid var(--border-dark); }
 
-        /* Main Layout Grid */
         .main-container { display: grid; grid-template-columns: 350px 1fr; gap: 16px; }
 
-        /* Control Panel */
         .control-panel { background: var(--surface-dark); border: 1px solid var(--border-dark); border-radius: var(--radius); padding: 18px; display: flex; flex-direction: column; gap: 12px; height: fit-content; }
         .panel-section-title { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--neon-blue); letter-spacing: 0.08em; font-family: 'JetBrains Mono', monospace; }
 
@@ -48,7 +44,7 @@
         .control-val { color: var(--neon-blue); font-weight: 700; font-family: 'JetBrains Mono', monospace; }
         
         input[type=range] { width: 100%; height: 5px; background: #334155; border-radius: 3px; outline: none; -webkit-appearance: none; }
-        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: var(--neon-blue); cursor: pointer; box-shadow: 0 0 10px var(--neon-blue); }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: var(--neon-blue); cursor: pointer; }
 
         .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px; }
         .btn { padding: 9px; border: 1px solid var(--border-dark); border-radius: 8px; font-weight: 600; font-size: 0.8rem; cursor: pointer; transition: 0.2s; background: var(--card-dark); color: var(--text-main); }
@@ -63,20 +59,23 @@
         details[open] summary::after { content: "▼"; }
         .advanced-grid { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--border-dark); }
 
-        /* Display Panel */
         .display-panel { display: flex; flex-direction: column; gap: 16px; }
 
         .sim-block { background: var(--surface-dark); border: 1px solid var(--border-dark); border-radius: var(--radius); padding: 18px; display: grid; grid-template-columns: 1fr 280px; gap: 18px; }
         .canvas-wrapper { display: flex; flex-direction: column; gap: 8px; }
+        
+        .view-toggle-bar { display: flex; justify-content: space-between; align-items: center; }
+        .view-btn-group { display: flex; gap: 4px; background: #020617; padding: 3px; border-radius: 6px; border: 1px solid var(--border-dark); }
+        .view-btn { border: none; padding: 4px 10px; border-radius: 4px; font-size: 0.72rem; font-weight: 600; cursor: pointer; color: var(--text-sub); background: transparent; }
+        .view-btn.active { background: var(--neon-blue); color: #000; font-weight: 700; }
+
         .canvas-container-outer { display: flex; gap: 10px; align-items: center; }
         .canvas-container { position: relative; width: 100%; border-radius: 8px; overflow: hidden; border: 1px solid var(--border-dark); background: #000; cursor: crosshair; }
         canvas#simCanvas { width: 100%; height: auto; display: block; }
         
-        /* Colorbar Visual */
         .colorbar-wrapper { display: flex; flex-direction: column; align-items: center; gap: 4px; height: 100%; justify-content: space-between; font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; color: var(--text-sub); }
         .colorbar { width: 12px; height: 260px; border-radius: 4px; background: linear-gradient(to top, #0000ff, #00ffff, #00ff00, #ffff00, #ff0000); border: 1px solid var(--border-dark); }
 
-        /* Metrics Card */
         .results-card { background: #020617; border: 1px solid var(--border-dark); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
         .results-header { font-size: 0.8rem; font-weight: 700; color: var(--text-main); border-bottom: 1px solid var(--border-dark); padding-bottom: 6px; display: flex; justify-content: space-between; }
         .metric-row { display: flex; justify-content: space-between; align-items: center; font-size: 0.78rem; }
@@ -84,19 +83,16 @@
         .metric-value { font-weight: 700; color: var(--text-main); font-family: 'JetBrains Mono', monospace; }
         .metric-highlight { color: var(--neon-red); font-size: 0.9rem; }
 
-        /* Multi Probe Info Box */
         .probe-list { display: flex; flex-direction: column; gap: 6px; border-top: 1px dashed var(--border-dark); padding-top: 8px; margin-top: 4px; }
         .probe-item { display: flex; justify-content: space-between; font-size: 0.72rem; padding: 4px 6px; border-radius: 4px; background: rgba(255,255,255,0.03); font-family: 'JetBrains Mono', monospace; }
 
-        /* Multi-Graph Grid */
         .graph-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
         .graph-card { background: var(--surface-dark); border: 1px solid var(--border-dark); border-radius: var(--radius); padding: 14px; display: flex; flex-direction: column; gap: 8px; }
         .graph-title { font-size: 0.78rem; font-weight: 700; color: var(--text-sub); display: flex; justify-content: space-between; }
         .chart-container { position: relative; width: 100%; height: 160px; }
 
-        /* Modal */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); display: none; justify-content: center; align-items: center; z-index: 1000; }
-        .modal { background: var(--surface-dark); border-radius: var(--radius); padding: 20px; width: 340px; border: 1px solid var(--border-dark); display: flex; flex-direction: column; gap: 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
+        .modal { background: var(--surface-dark); border-radius: var(--radius); padding: 20px; width: 340px; border: 1px solid var(--border-dark); display: flex; flex-direction: column; gap: 14px; }
         .modal-title { font-size: 0.95rem; font-weight: 700; color: var(--text-main); }
         .modal-input { display: flex; flex-direction: column; gap: 4px; }
         .modal-input label { font-size: 0.78rem; color: var(--text-sub); font-weight: 600; }
@@ -109,7 +105,7 @@
     <header>
         <div class="title-area">
             <h1>Bioheat & Phantom Numerical Simulator <span>PRO R&D</span></h1>
-            <p>다중 프로브 포인트 및 국소 대류 냉각(Cooling Trench) 고정밀 수치해석 툴</p>
+            <p>다중 프로브 및 융합 시각화(Hybrid Thermal View) 수치해석 시스템</p>
         </div>
         <div class="mode-selector">
             <button class="mode-btn" id="btnModeA" onclick="setMode('A')">MODE A (Pennes)</button>
@@ -188,15 +184,23 @@
         <div class="display-panel">
             <div class="sim-block">
                 <div class="canvas-wrapper">
-                    <div class="control-label">
-                        <span>2D Thermal Field (다중 핀 클릭 측정)</span>
-                        <span id="timeDisplay" style="color:var(--neon-blue); font-family:'JetBrains Mono',monospace; font-weight:700;">0.0 s</span>
+                    <div class="view-toggle-bar">
+                        <div class="control-label">
+                            <span>2D Field Display</span>
+                            <span id="timeDisplay" style="color:var(--neon-blue); font-family:'JetBrains Mono',monospace; font-weight:700; margin-left:8px;">0.0 s</span>
+                        </div>
+                        <!-- View Mode Toggle Buttons -->
+                        <div class="view-btn-group">
+                            <button class="view-btn active" id="vBtnHybrid" onclick="setViewMode('hybrid')">✨ 융합 모드</button>
+                            <button class="view-btn" id="vBtnTissue" onclick="setViewMode('tissue')">🧬 조직 모드</button>
+                            <button class="view-btn" id="vBtnThermal" onclick="setViewMode('thermal')">🔥 열화상 모드</button>
+                        </div>
                     </div>
+
                     <div class="canvas-container-outer">
                         <div class="canvas-container">
                             <canvas id="simCanvas" width="500" height="300"></canvas>
                         </div>
-                        <!-- Colorbar -->
                         <div class="colorbar-wrapper">
                             <span>65℃</span>
                             <div class="colorbar"></div>
@@ -232,7 +236,6 @@
                         <span class="metric-value" style="color:var(--neon-red);" id="resErrorRate">N/A</span>
                     </div>
 
-                    <!-- Multi-Probe Dynamic List -->
                     <div class="probe-list" id="probeList">
                         <div style="font-size:0.7rem; color:var(--text-sub);">📍 화면을 클릭하여 측정 핀 설치</div>
                     </div>
@@ -258,7 +261,6 @@
     </div>
 </div>
 
-<!-- Modal -->
 <div class="modal-overlay" id="expModal">
     <div class="modal">
         <div class="modal-title">🧪 실험 측정 데이터 입력</div>
@@ -276,6 +278,7 @@
 <script>
 const W = 100, H = 60;
 let currentMode = 'B';
+let viewMode = 'hybrid'; // 'hybrid', 'tissue', 'thermal'
 let isRunning = false;
 let animId = null;
 let simTime = 0;
@@ -285,30 +288,46 @@ let T_next = Array.from({ length: H }, () => new Float32Array(W).fill(36.0));
 
 let totalEnergyIn = 0;
 let totalEnergyFluid = 0;
-let expData = null;
 
-// Multi Probe State (최대 3개)
 let probes = []; 
 const probeColors = ['#f43f5e', '#38bdf8', '#34d399'];
 
 const canvas = document.getElementById('simCanvas');
 const ctx = canvas.getContext('2d');
 
-// Pre-render Tissue Background
+// Pre-render Vivid Tissue Background
 function drawTissueBackground() {
     const bg = document.createElement('canvas');
     bg.width = 500; bg.height = 300;
     const bCtx = bg.getContext('2d');
 
-    bCtx.fillStyle = '#2a1215'; bCtx.fillRect(0, 0, 500, 30); // Epidermis
-    bCtx.fillStyle = '#3f1719'; bCtx.fillRect(0, 30, 500, 100); // Dermis
-    bCtx.fillStyle = '#3a2e10'; bCtx.fillRect(0, 130, 500, 90); // Fat
-    bCtx.fillStyle = '#2b0d0d'; bCtx.fillRect(0, 220, 500, 80); // Muscle
+    // Epidermis (표피)
+    bCtx.fillStyle = '#fecdd3'; bCtx.fillRect(0, 0, 500, 30);
+    bCtx.fillStyle = '#fda4af'; bCtx.fillRect(0, 26, 500, 4);
+
+    // Dermis (진피)
+    bCtx.fillStyle = '#f87171'; bCtx.fillRect(0, 30, 500, 100);
+
+    // Subcutaneous Fat (피하지방)
+    bCtx.fillStyle = '#fef08a'; bCtx.fillRect(0, 130, 500, 90);
+    bCtx.fillStyle = '#facc15';
+    for (let y = 135; y < 215; y += 14) {
+        for (let x = (y%2)*10; x < 500; x += 20) {
+            bCtx.beginPath(); bCtx.arc(x, y, 4, 0, Math.PI*2); bCtx.fill();
+        }
+    }
+
+    // Muscle (근육층)
+    bCtx.fillStyle = '#991b1b'; bCtx.fillRect(0, 220, 500, 80);
+    bCtx.strokeStyle = '#b91c1c'; bCtx.lineWidth = 2;
+    for (let y = 226; y < 300; y += 8) {
+        bCtx.beginPath(); bCtx.moveTo(0, y); bCtx.lineTo(500, y); bCtx.stroke();
+    }
     return bg;
 }
 const tissueBG = drawTissueBackground();
 
-// Setup Chart.js with Dark Theme
+// Setup Chart.js
 Chart.defaults.color = '#94a3b8';
 Chart.defaults.borderColor = '#334155';
 
@@ -336,7 +355,6 @@ const chart3 = new Chart(document.getElementById('chart3'), {
     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { min: 30, max: 70 } } }
 });
 
-// UI Event Handling
 const controls = ['tHeat', 'flow', 'vesselDiam', 'vesselDepth', 'tInlet', 'tInit', 'maxTime', 'kVal', 'cVal'];
 controls.forEach(id => {
     const el = document.getElementById(id);
@@ -360,9 +378,16 @@ function setMode(mode) {
     resetSim();
 }
 
-// Multi Probe Click Event
+function setViewMode(vMode) {
+    viewMode = vMode;
+    document.getElementById('vBtnHybrid').classList.toggle('active', vMode === 'hybrid');
+    document.getElementById('vBtnTissue').classList.toggle('active', vMode === 'tissue');
+    document.getElementById('vBtnThermal').classList.toggle('active', vMode === 'thermal');
+    render();
+}
+
 canvas.addEventListener('click', (e) => {
-    if (probes.length >= 3) probes.shift(); // Max 3 Probes
+    if (probes.length >= 3) probes.shift();
 
     const rect = canvas.getBoundingClientRect();
     const gridX = Math.min(W - 1, Math.max(0, Math.floor((e.clientX - rect.left) * (canvas.width / rect.width) / 5)));
@@ -410,7 +435,6 @@ function updateChart1Datasets() {
     chart1.update();
 }
 
-// Physics Step
 function stepPhysics() {
     const dt = 0.1, dx = 0.001;
     const k = parseFloat(document.getElementById('kVal').value);
@@ -422,13 +446,12 @@ function stepPhysics() {
     const tInlet = parseFloat(document.getElementById('tInlet').value);
 
     const heatX = Math.floor(W / 2);
-    const vesselY = Math.floor(depth_mm * 4); // Convert mm to Grid index
+    const vesselY = Math.floor(depth_mm * 4);
 
     let maxT = -999, sumT = 0;
 
     for (let i = 1; i < H - 1; i++) {
         for (let j = 1; j < W - 1; j++) {
-            // Contact Surface Heat Source
             if (i <= 2 && Math.abs(j - heatX) <= 6) {
                 T[i][j] = tHeat;
                 totalEnergyIn += 30 * dt;
@@ -442,7 +465,6 @@ function stepPhysics() {
                 let wb = (flow_mL / 100) * 0.015;
                 coolingTerm = (wb * 1060 * 3800 / (1050 * c)) * (36.0 - T[i][j]);
             } else {
-                // MODE B: Discrete Vessel Tube Cooling
                 let radiusPx = Math.max(1, Math.floor(diam_mm / 2));
                 if (Math.abs(i - vesselY) <= radiusPx) {
                     let h_conv = 900 * (1 + flow_mL * 0.1);
@@ -463,10 +485,8 @@ function stepPhysics() {
     let temp = T; T = T_next; T_next = temp;
     simTime += dt;
 
-    // Update Probe Data
     probes.forEach(p => p.history.push(T[p.y][p.x].toFixed(1)));
 
-    // UI Updates
     document.getElementById('timeDisplay').innerText = simTime.toFixed(1) + " s";
     document.getElementById('resMaxTemp').innerText = maxT.toFixed(1) + " ℃";
     document.getElementById('resAvgTemp').innerText = (sumT / (W*H)).toFixed(1) + " ℃";
@@ -475,12 +495,10 @@ function stepPhysics() {
 
     updateProbeUI();
 
-    // Chart Updates
     if (Math.floor(simTime * 10) % 10 === 0) {
         chart1.data.labels.push(simTime.toFixed(0));
         chart1.update('none');
 
-        // Y-axis Depth Profile at Center Column
         chart3.data.datasets[0].data = Array.from({length: H}, (_, i) => T[i][heatX]);
         chart3.update('none');
     }
@@ -488,51 +506,77 @@ function stepPhysics() {
     if (simTime >= parseFloat(document.getElementById('maxTime').value)) toggleSim();
 }
 
-// Thermal Rendering
+// Multi-mode Render System
 function render() {
-    ctx.drawImage(tissueBG, 0, 0);
+    if (viewMode === 'thermal') {
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(0, 0, 500, 300);
+    } else {
+        ctx.drawImage(tissueBG, 0, 0);
+    }
 
-    let imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    let data = imgData.data;
+    if (viewMode !== 'tissue') {
+        let imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        let data = imgData.data;
 
-    for (let i = 0; i < H; i++) {
-        for (let j = 0; j < W; j++) {
-            let temp = T[i][j];
-            let norm = Math.max(0, Math.min(1, (temp - 30) / 35)); // 30 ~ 65 ℃ Scale
+        for (let i = 0; i < H; i++) {
+            for (let j = 0; j < W; j++) {
+                let temp = T[i][j];
+                let norm = Math.max(0, Math.min(1, (temp - 30) / 35));
 
-            if (norm > 0.01) {
-                // Thermal Color Mapping (Jet-like Palette)
-                let r = Math.min(255, Math.max(0, 255 * (1.5 - Math.abs(norm * 4 - 3))));
-                let g = Math.min(255, Math.max(0, 255 * (1.5 - Math.abs(norm * 4 - 2))));
-                let b = Math.min(255, Math.max(0, 255 * (1.5 - Math.abs(norm * 4 - 1))));
+                if (norm > 0.02) {
+                    let r = Math.min(255, Math.max(0, 255 * (1.5 - Math.abs(norm * 4 - 3))));
+                    let g = Math.min(255, Math.max(0, 255 * (1.5 - Math.abs(norm * 4 - 2))));
+                    let b = Math.min(255, Math.max(0, 255 * (1.5 - Math.abs(norm * 4 - 1))));
 
-                for (let py = 0; py < 5; py++) {
-                    for (let px = 0; px < 5; px++) {
-                        let idx = (((i * 5) + py) * 500 + ((j * 5) + px)) * 4;
-                        data[idx] = Math.min(255, data[idx] + r * 0.8);
-                        data[idx+1] = Math.min(255, data[idx+1] + g * 0.8);
-                        data[idx+2] = Math.min(255, data[idx+2] + b * 0.8);
+                    let alpha = viewMode === 'hybrid' ? Math.min(0.75, norm * 1.2) : 1.0;
+
+                    for (let py = 0; py < 5; py++) {
+                        for (let px = 0; px < 5; px++) {
+                            let idx = (((i * 5) + py) * 500 + ((j * 5) + px)) * 4;
+                            if (viewMode === 'hybrid') {
+                                data[idx] = data[idx] * (1 - alpha) + r * alpha;
+                                data[idx+1] = data[idx+1] * (1 - alpha) + g * alpha;
+                                data[idx+2] = data[idx+2] * (1 - alpha) + b * alpha;
+                            } else {
+                                data[idx] = r; data[idx+1] = g; data[idx+2] = b;
+                            }
+                        }
                     }
                 }
             }
         }
+        ctx.putImageData(imgData, 0, 0);
     }
-    ctx.putImageData(imgData, 0, 0);
 
-    // Render Vessel Tube Line in MODE B
+    // Contact Surface Heater
+    ctx.fillStyle = '#ef4444';
+    ctx.fillRect(210, 0, 80, 6);
+
+    // Vessel Tube Line
     if (currentMode === 'B') {
         let diam_mm = parseFloat(document.getElementById('vesselDiam').value);
         let depth_mm = parseFloat(document.getElementById('vesselDepth').value);
         let vesselY_px = depth_mm * 20;
 
-        ctx.strokeStyle = 'rgba(56, 189, 248, 0.9)';
-        ctx.lineWidth = Math.max(2, diam_mm * 1.5);
+        ctx.strokeStyle = '#2563eb';
+        ctx.lineWidth = Math.max(3, diam_mm * 1.5);
         ctx.beginPath();
         ctx.moveTo(0, vesselY_px); ctx.lineTo(500, vesselY_px);
         ctx.stroke();
     }
 
-    // Render Probe Pin Markers
+    // Tissue Layer Labels Overlay
+    if (viewMode !== 'thermal') {
+        ctx.font = '600 10px Pretendard';
+        ctx.fillStyle = 'rgba(255,255,255,0.7)';
+        ctx.fillText('표피 (Epidermis)', 10, 18);
+        ctx.fillText('진피 (Dermis)', 10, 60);
+        ctx.fillText('피하지방 (Subcutaneous Fat)', 10, 160);
+        ctx.fillText('근육 (Muscle)', 10, 250);
+    }
+
+    // Probe Pins
     probes.forEach(p => {
         ctx.fillStyle = p.color;
         ctx.strokeStyle = '#ffffff';
@@ -581,7 +625,6 @@ function resetSim() {
     render();
 }
 
-// Data Export Functions
 function exportCSV() {
     let csv = "Time(s),MaxTemp(C),EnergyIn(J),EnergyFluid(J)\n";
     csv += `${simTime.toFixed(1)},${document.getElementById('resMaxTemp').innerText},${totalEnergyIn},${totalEnergyFluid}\n`;
