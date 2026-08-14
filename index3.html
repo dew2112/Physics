@@ -116,40 +116,40 @@
     <div class="main-container">
         <!-- Control Panel -->
         <div class="control-panel">
-            <div class="panel-section-title">⚡ Control Parameters</div>
+            <div class="panel-section-title"> Control Parameters</div>
 
             <div class="control-item">
-                <div class="control-label"><span>🔥 표면 열원 온도</span><span class="control-val" id="v_tHeat">65 ℃</span></div>
+                <div class="control-label"><span> 표면 열원 온도</span><span class="control-val" id="v_tHeat">65 ℃</span></div>
                 <input type="range" id="tHeat" min="30" max="100" step="1" value="65">
             </div>
 
             <div class="control-item">
-                <div class="control-label"><span>💧 혈류/유체 유량</span><span class="control-val" id="v_flow">50 mL/min</span></div>
+                <div class="control-label"><span> 혈류/유체 유량</span><span class="control-val" id="v_flow">50 mL/min</span></div>
                 <input type="range" id="flow" min="0" max="100" step="5" value="50">
             </div>
 
             <div class="control-item">
-                <div class="control-label"><span>🩸 혈관 직경</span><span class="control-val" id="v_vesselDiam">5 mm</span></div>
+                <div class="control-label"><span> 혈관 직경</span><span class="control-val" id="v_vesselDiam">5 mm</span></div>
                 <input type="range" id="vesselDiam" min="1" max="10" step="0.5" value="5">
             </div>
 
             <div class="control-item">
-                <div class="control-label"><span>📏 혈관 매설 깊이</span><span class="control-val" id="v_vesselDepth">3.5 mm</span></div>
+                <div class="control-label"><span> 혈관 매설 깊이</span><span class="control-val" id="v_vesselDepth">3.5 mm</span></div>
                 <input type="range" id="vesselDepth" min="2" max="8" step="0.5" value="3.5">
             </div>
 
             <div class="control-item">
-                <div class="control-label"><span>🧊 유체 주입 온도</span><span class="control-val" id="v_tInlet">20 ℃</span></div>
+                <div class="control-label"><span> 유체 주입 온도</span><span class="control-val" id="v_tInlet">20 ℃</span></div>
                 <input type="range" id="tInlet" min="10" max="37" step="1" value="20">
             </div>
 
             <div class="control-item">
-                <div class="control-label"><span>🌡️ 초기 조직 온도</span><span class="control-val" id="v_tInit">36 ℃</span></div>
+                <div class="control-label"><span> 초기 조직 온도</span><span class="control-val" id="v_tInit">36 ℃</span></div>
                 <input type="range" id="tInit" min="35" max="40" step="0.5" value="36">
             </div>
 
             <div class="control-item">
-                <div class="control-label"><span>⏱️ 가열 설정 시간</span><span class="control-val" id="v_maxTime">450 s</span></div>
+                <div class="control-label"><span> 가열 설정 시간</span><span class="control-val" id="v_maxTime">450 s</span></div>
                 <input type="range" id="maxTime" min="30" max="600" step="30" value="450">
             </div>
 
@@ -174,10 +174,10 @@
 
             <div class="btn-group">
                 <button class="btn" onclick="exportCSV()">💾 CSV 다운로드</button>
-                <button class="btn" onclick="captureCanvas()">📸 캡처 저장</button>
+                <button class="btn" onclick="captureCanvas()"> 캡처 저장</button>
             </div>
 
-            <button class="btn" onclick="openModal()" style="margin-top: 2px;">🧪 실험 데이터 입력 및 비교</button>
+            <button class="btn" onclick="openModal()" style="margin-top: 2px;"> 실험 데이터 입력 및 비교</button>
         </div>
 
         <!-- Display Panel -->
@@ -189,11 +189,10 @@
                             <span>2D Field Display</span>
                             <span id="timeDisplay" style="color:var(--neon-blue); font-family:'JetBrains Mono',monospace; font-weight:700; margin-left:8px;">0.0 s</span>
                         </div>
-                        <!-- View Mode Toggle Buttons -->
                         <div class="view-btn-group">
-                            <button class="view-btn active" id="vBtnHybrid" onclick="setViewMode('hybrid')">✨ 융합 모드</button>
-                            <button class="view-btn" id="vBtnTissue" onclick="setViewMode('tissue')">🧬 조직 모드</button>
-                            <button class="view-btn" id="vBtnThermal" onclick="setViewMode('thermal')">🔥 열화상 모드</button>
+                            <button class="view-btn active" id="vBtnHybrid" onclick="setViewMode('hybrid')"> 융합 모드</button>
+                            <button class="view-btn" id="vBtnTissue" onclick="setViewMode('tissue')"> 조직 모드</button>
+                            <button class="view-btn" id="vBtnThermal" onclick="setViewMode('thermal')"> 열화상 모드</button>
                         </div>
                     </div>
 
@@ -237,7 +236,7 @@
                     </div>
 
                     <div class="probe-list" id="probeList">
-                        <div style="font-size:0.7rem; color:var(--text-sub);">📍 화면을 클릭하여 측정 핀 설치</div>
+                        <div style="font-size:0.7rem; color:var(--text-sub);"> 화면을 클릭하여 측정 핀 설치</div>
                     </div>
                 </div>
             </div>
@@ -245,15 +244,15 @@
             <!-- Multi Graphs -->
             <div class="graph-grid">
                 <div class="graph-card">
-                    <div class="graph-title">📈 ① 지점별 실시간 온도 곡선</div>
+                    <div class="graph-title"> ① 지점별 실시간 온도 곡선</div>
                     <div class="chart-container"><canvas id="chart1"></canvas></div>
                 </div>
                 <div class="graph-card">
-                    <div class="graph-title">📊 ② 유량별 평형 최고온도</div>
+                    <div class="graph-title"> ② 유량별 평형 최고온도</div>
                     <div class="chart-container"><canvas id="chart2"></canvas></div>
                 </div>
                 <div class="graph-card">
-                    <div class="graph-title">📍 ③ Y축 깊이 온도 프로파일</div>
+                    <div class="graph-title"> ③ Y축 깊이 온도 프로파일</div>
                     <div class="chart-container"><canvas id="chart3"></canvas></div>
                 </div>
             </div>
@@ -278,7 +277,7 @@
 <script>
 const W = 100, H = 60;
 let currentMode = 'B';
-let viewMode = 'hybrid'; // 'hybrid', 'tissue', 'thermal'
+let viewMode = 'hybrid'; 
 let isRunning = false;
 let animId = null;
 let simTime = 0;
@@ -291,24 +290,21 @@ let totalEnergyFluid = 0;
 
 let probes = []; 
 const probeColors = ['#f43f5e', '#38bdf8', '#34d399'];
+const probeNames = ['A', 'B', 'C']; // 핀 이름 고정 배열
 
 const canvas = document.getElementById('simCanvas');
 const ctx = canvas.getContext('2d');
 
-// Pre-render Vivid Tissue Background
 function drawTissueBackground() {
     const bg = document.createElement('canvas');
     bg.width = 500; bg.height = 300;
     const bCtx = bg.getContext('2d');
 
-    // Epidermis (표피)
     bCtx.fillStyle = '#fecdd3'; bCtx.fillRect(0, 0, 500, 30);
     bCtx.fillStyle = '#fda4af'; bCtx.fillRect(0, 26, 500, 4);
 
-    // Dermis (진피)
     bCtx.fillStyle = '#f87171'; bCtx.fillRect(0, 30, 500, 100);
 
-    // Subcutaneous Fat (피하지방)
     bCtx.fillStyle = '#fef08a'; bCtx.fillRect(0, 130, 500, 90);
     bCtx.fillStyle = '#facc15';
     for (let y = 135; y < 215; y += 14) {
@@ -317,7 +313,6 @@ function drawTissueBackground() {
         }
     }
 
-    // Muscle (근육층)
     bCtx.fillStyle = '#991b1b'; bCtx.fillRect(0, 220, 500, 80);
     bCtx.strokeStyle = '#b91c1c'; bCtx.lineWidth = 2;
     for (let y = 226; y < 300; y += 8) {
@@ -327,7 +322,6 @@ function drawTissueBackground() {
 }
 const tissueBG = drawTissueBackground();
 
-// Setup Chart.js
 Chart.defaults.color = '#94a3b8';
 Chart.defaults.borderColor = '#334155';
 
@@ -386,6 +380,7 @@ function setViewMode(vMode) {
     render();
 }
 
+// 📌 [버그 수정 1 & 2] 핀 이름 부여 로직 정상화 및 클릭 즉시 render() 재호출
 canvas.addEventListener('click', (e) => {
     if (probes.length >= 3) probes.shift();
 
@@ -394,26 +389,31 @@ canvas.addEventListener('click', (e) => {
     const gridY = Math.min(H - 1, Math.max(0, Math.floor((e.clientY - rect.top) * (canvas.height / rect.height) / 5)));
 
     probes.push({
-        id: String.fromCharCode(65 + probes.length),
+        id: probeNames[probes.length], // 고정된 알파벳 순서 할당
         x: gridX, y: gridY,
         color: probeColors[probes.length % 3],
         history: []
     });
 
+    // 핀 이름 재정렬 (A, B, C 순서 보장)
+    probes.forEach((p, idx) => p.id = probeNames[idx]);
+
     updateProbeUI();
     updateChart1Datasets();
+    render(); // 클릭 즉시 화면 재연출!
 });
 
 function clearProbes() {
     probes = [];
     updateProbeUI();
     updateChart1Datasets();
+    render();
 }
 
 function updateProbeUI() {
     const listEl = document.getElementById('probeList');
     if (probes.length === 0) {
-        listEl.innerHTML = `<div style="font-size:0.7rem; color:var(--text-sub);">📍 화면을 클릭하여 측정 핀 설치</div>`;
+        listEl.innerHTML = `<div style="font-size:0.7rem; color:var(--text-sub);"> 화면을 클릭하여 측정 핀 설치</div>`;
         return;
     }
     listEl.innerHTML = probes.map(p => `
@@ -506,7 +506,6 @@ function stepPhysics() {
     if (simTime >= parseFloat(document.getElementById('maxTime').value)) toggleSim();
 }
 
-// Multi-mode Render System
 function render() {
     if (viewMode === 'thermal') {
         ctx.fillStyle = '#000000';
@@ -549,11 +548,9 @@ function render() {
         ctx.putImageData(imgData, 0, 0);
     }
 
-    // Contact Surface Heater
     ctx.fillStyle = '#ef4444';
     ctx.fillRect(210, 0, 80, 6);
 
-    // Vessel Tube Line
     if (currentMode === 'B') {
         let diam_mm = parseFloat(document.getElementById('vesselDiam').value);
         let depth_mm = parseFloat(document.getElementById('vesselDepth').value);
@@ -566,7 +563,6 @@ function render() {
         ctx.stroke();
     }
 
-    // Tissue Layer Labels Overlay
     if (viewMode !== 'thermal') {
         ctx.font = '600 10px Pretendard';
         ctx.fillStyle = 'rgba(255,255,255,0.7)';
@@ -576,19 +572,19 @@ function render() {
         ctx.fillText('근육 (Muscle)', 10, 250);
     }
 
-    // Probe Pins
+    // 📌 [버그 수정 3] 핀 알파벳 글자 출력 위치 및 폰트 선명화
     probes.forEach(p => {
         ctx.fillStyle = p.color;
         ctx.strokeStyle = '#ffffff';
         ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.arc(p.x * 5 + 2.5, p.y * 5 + 2.5, 6, 0, Math.PI * 2);
+        ctx.arc(p.x * 5 + 2.5, p.y * 5 + 2.5, 7, 0, Math.PI * 2);
         ctx.fill();
         ctx.stroke();
 
-        ctx.font = 'bold 10px JetBrains Mono';
+        ctx.font = 'bold 11px Pretendard';
         ctx.fillStyle = '#ffffff';
-        ctx.fillText(p.id, p.x * 5 + 10, p.y * 5 + 4);
+        ctx.fillText(p.id, p.x * 5 + 12, p.y * 5 + 6);
     });
 }
 
