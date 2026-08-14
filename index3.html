@@ -3,409 +3,543 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pennes Bioheat Lab - Modern Simulator</title>
-    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <title>Bioheat & Phantom Numerical Simulator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        * { box-sizing: border-box; font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif; margin: 0; padding: 0; }
-        body { background-color: #f8fafc; color: #1e293b; padding: 24px; min-height: 100vh; }
+        :root {
+            --bg-main: #f8fafc;
+            --surface: #ffffff;
+            --border: #e2e8f0;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            --primary: #0284c7;
+            --primary-hover: #0369a1;
+            --accent-red: #ef4444;
+            --accent-blue: #2563eb;
+            --radius: 12px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+        body { background-color: var(--bg-main); color: var(--text-primary); padding: 24px; display: flex; justify-content: center; }
+
+        .dashboard { width: 100%; max-width: 1440px; display: flex; flex-direction: column; gap: 20px; }
+
+        /* Header */
+        header { background: var(--surface); padding: 20px 24px; border-radius: var(--radius); border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .title-area h1 { font-size: 1.35rem; font-weight: 700; color: var(--text-primary); letter-spacing: -0.02em; }
+        .title-area p { font-size: 0.85rem; color: var(--text-secondary); margin-top: 4px; }
         
-        header { max-width: 1280px; margin: 0 auto 24px auto; }
-        .title-badge { background: #e0f2fe; color: #0284c7; font-weight: 700; font-size: 0.8rem; padding: 4px 12px; border-radius: 20px; display: inline-block; margin-bottom: 6px; }
-        h1 { font-size: 1.6rem; font-weight: 800; color: #0f172a; letter-spacing: -0.5px; }
-        p.subtitle { font-size: 0.9rem; color: #64748b; margin-top: 2px; }
+        .mode-selector { display: flex; background: #f1f5f9; padding: 4px; border-radius: 8px; border: 1px solid var(--border); gap: 4px; }
+        .mode-btn { border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 0.85rem; cursor: pointer; color: var(--text-secondary); background: transparent; transition: 0.2s; }
+        .mode-btn.active { background: var(--surface); color: var(--primary); shadow: 0 1px 3px rgba(0,0,0,0.1); }
 
-        .grid-container { max-width: 1280px; margin: 0 auto; display: grid; grid-template-columns: 2.2fr 1fr; gap: 24px; }
-        @media (max-width: 1024px) { .grid-container { grid-template-columns: 1fr; } }
+        /* Layout Grid: 30% Left, 70% Right */
+        .main-container { display: grid; grid-template-columns: 340px 1fr; gap: 20px; }
 
-        .card { background: #ffffff; border-radius: 20px; padding: 24px; border: 1px solid #e2e8f0; box-shadow: 0 4px 20px -2px rgba(0,0,0,0.05); }
-        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .card-title { font-size: 1.1rem; font-weight: 700; color: #334155; }
+        /* Control Panel (30%) */
+        .control-panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; display: flex; flex-direction: column; gap: 16px; height: fit-content; }
+        .panel-section-title { font-size: 0.9rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em; margin-bottom: 4px; }
 
-        .canvas-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-        @media (max-width: 640px) { .canvas-grid { grid-template-columns: 1fr; } }
+        .control-item { display: flex; flex-direction: column; gap: 6px; }
+        .control-label { display: flex; justify-content: space-between; font-size: 0.82rem; font-weight: 600; color: var(--text-secondary); }
+        .control-val { color: var(--primary); font-weight: 700; }
         
-        .canvas-wrapper { background: #f1f5f9; border-radius: 16px; padding: 12px; text-align: center; border: 1px solid #cbd5e1; }
-        .canvas-label { font-size: 0.85rem; font-weight: 700; color: #475569; margin-bottom: 8px; }
-        canvas { width: 100%; height: auto; border-radius: 12px; display: block; cursor: crosshair; background: #fff; }
+        input[type=range] { width: 100%; height: 5px; background: #e2e8f0; border-radius: 3px; outline: none; -webkit-appearance: none; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: var(--primary); cursor: pointer; }
 
-        .legend-container { margin-top: 20px; background: #f8fafc; padding: 12px 16px; border-radius: 12px; border: 1px solid #e2e8f0; }
-        .legend-bar { height: 14px; border-radius: 7px; background: linear-gradient(to right, #1d4ed8, #06b6d4, #22c55e, #eab308, #ef4444, #9f1239); margin: 8px 0; }
-        .legend-labels { display: flex; justify-content: space-between; font-size: 0.78rem; font-weight: 700; color: #475569; }
+        .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+        .btn { padding: 10px; border: 1px solid var(--border); border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: 0.2s; background: var(--surface); color: var(--text-primary); }
+        .btn-primary { background: var(--primary); color: white; border: none; }
+        .btn-primary:hover { background: var(--primary-hover); }
+        .btn-danger { background: #fef2f2; color: var(--accent-red); border-color: #fecaca; }
 
-        .control-item { margin-bottom: 20px; }
-        .control-label { display: flex; justify-content: space-between; font-size: 0.88rem; font-weight: 600; color: #475569; margin-bottom: 8px; }
-        .control-val { color: #0284c7; font-weight: 700; }
+        /* Accordion Advanced Options */
+        details { border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; background: #f8fafc; }
+        summary { font-size: 0.82rem; font-weight: 700; color: var(--text-secondary); cursor: pointer; list-style: none; display: flex; justify-content: space-between; align-items: center; }
+        summary::after { content: "►"; font-size: 0.7rem; }
+        details[open] summary::after { content: "▼"; }
+        .advanced-grid { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border); }
+
+        /* Right Area (70%) */
+        .display-panel { display: flex; flex-direction: column; gap: 20px; }
+
+        /* Top Sim Visual Block */
+        .sim-block { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; display: grid; grid-template-columns: 1fr 280px; gap: 20px; }
+        .canvas-wrapper { display: flex; flex-direction: column; gap: 8px; }
+        .canvas-container { position: relative; width: 100%; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); background: #000; }
+        canvas#simCanvas { width: 100%; height: auto; display: block; }
         
-        input[type=range] { width: 100%; height: 6px; background: #e2e8f0; border-radius: 3px; outline: none; -webkit-appearance: none; }
-        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: #0284c7; cursor: pointer; transition: 0.15s ease; box-shadow: 0 2px 6px rgba(2,132,199,0.4); }
+        /* Sim Metrics Card */
+        .results-card { background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+        .results-header { font-size: 0.85rem; font-weight: 700; color: var(--text-primary); border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+        .metric-row { display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; }
+        .metric-label { color: var(--text-secondary); }
+        .metric-value { font-weight: 700; color: var(--text-primary); }
+        .metric-highlight { color: var(--primary); font-size: 0.95rem; }
 
-        .btn-group { display: flex; gap: 10px; margin-top: 24px; }
-        .btn { flex: 1; padding: 12px; border: none; border-radius: 12px; font-size: 0.9rem; font-weight: 700; cursor: pointer; transition: 0.2s; }
-        .btn-primary { background: #0284c7; color: #fff; box-shadow: 0 4px 12px rgba(2,132,199,0.25); }
-        .btn-danger { background: #fee2e2; color: #ef4444; }
+        /* Multi-Graph Grid */
+        .graph-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+        .graph-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+        .graph-title { font-size: 0.82rem; font-weight: 700; color: var(--text-secondary); }
+        .chart-container { position: relative; width: 100%; height: 160px; }
 
-        .info-card { background: #f0f9ff; border-radius: 12px; padding: 16px; border: 1px solid #bae6fd; margin-top: 20px; }
-        .info-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.85rem; color: #0369a1; }
-        .info-value { font-weight: 700; color: #0c4a6e; }
+        /* Modal for Input Experiment Data */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15,23,42,0.4); display: none; justify-content: center; align-items: center; z-index: 1000; }
+        .modal { background: var(--surface); border-radius: var(--radius); padding: 24px; width: 360px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 16px; }
+        .modal-title { font-size: 1rem; font-weight: 700; color: var(--text-primary); }
+        .modal-input { display: flex; flex-direction: column; gap: 4px; }
+        .modal-input label { font-size: 0.8rem; color: var(--text-secondary); font-weight: 600; }
+        .modal-input input { padding: 8px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.85rem; outline: none; }
     </style>
 </head>
 <body>
 
-<header>
-    <div>
-        <span class="title-badge">PHYSICS & BIOENGINEERING LAB</span>
-        <h1>Pennes 생체열전달(Bioheat) 시뮬레이터</h1>
-        <p class="subtitle">열역학 제1법칙 및 생체조직 내 관류 혈류량에 따른 열 수송 수치해석</p>
-    </div>
-</header>
+<div class="dashboard">
+    <!-- Header -->
+    <header>
+        <div class="title-area">
+            <h1>Bioheat & Phantom Numerical Simulator</h1>
+            <p>열역학 제1법칙 및 수치해석 기반 생체열전달/Phantom 비교 검증 모델</p>
+        </div>
+        <div class="mode-selector">
+            <button class="mode-btn" id="btnModeA" onclick="setMode('A')">MODE A (Pennes)</button>
+            <button class="mode-btn active" id="btnModeB" onclick="setMode('B')">MODE B (Phantom)</button>
+        </div>
+    </header>
 
-<div class="grid-container">
-    <div class="card">
-        <div class="card-header">
-            <span class="card-title">🔬 HD 피부 해부학 모델 및 고대비 열지도</span>
-            <span style="font-size: 0.8rem; color: #0284c7; font-weight: 700;">Range: 35.0°C ~ 41.0°C</span>
+    <div class="main-container">
+        <!-- Control Panel (Left 30%) -->
+        <div class="control-panel">
+            <div class="panel-section-title">메인 제어 변수</div>
+
+            <div class="control-item">
+                <div class="control-label"><span>🔥 열원 온도</span><span class="control-val" id="v_tHeat">50 ℃</span></div>
+                <input type="range" id="tHeat" min="30" max="100" step="1" value="50">
+            </div>
+
+            <div class="control-item">
+                <div class="control-label"><span>💧 혈관 유량</span><span class="control-val" id="v_flow">20 mL/min</span></div>
+                <input type="range" id="flow" min="0" max="100" step="5" value="20">
+            </div>
+
+            <div class="control-item">
+                <div class="control-label"><span>🩸 혈관 직경</span><span class="control-val" id="v_vesselDiam">4 mm</span></div>
+                <input type="range" id="vesselDiam" min="1" max="10" step="0.5" value="4">
+            </div>
+
+            <div class="control-item">
+                <div class="control-label"><span>🌡️ 초기 조직 온도</span><span class="control-val" id="v_tInit">37 ℃</span></div>
+                <input type="range" id="tInit" min="35" max="40" step="0.5" value="37">
+            </div>
+
+            <div class="control-item">
+                <div class="control-label"><span>⏱️ 가열 설정 시간</span><span class="control-val" id="v_maxTime">300 s</span></div>
+                <input type="range" id="maxTime" min="30" max="600" step="30" value="300">
+            </div>
+
+            <div class="control-item">
+                <div class="control-label"><span>🌬️ 주변 손실 온도</span><span class="control-val" id="v_tExt">25 ℃</span></div>
+                <input type="range" id="tExt" min="10" max="40" step="1" value="25">
+            </div>
+
+            <!-- Advanced Parameters -->
+            <details>
+                <summary>⚙️ 고급 조직 물성 설정</summary>
+                <div class="advanced-grid">
+                    <div class="control-item">
+                        <div class="control-label"><span>열전도율 (k)</span><span class="control-val" id="v_k">0.5 W/m·K</span></div>
+                        <input type="range" id="kVal" min="0.1" max="1.0" step="0.05" value="0.5">
+                    </div>
+                    <div class="control-item">
+                        <div class="control-label"><span>비열 (c)</span><span class="control-val" id="v_c">3600 J/kg·K</span></div>
+                        <input type="range" id="cVal" min="2000" max="4200" step="100" value="3600">
+                    </div>
+                    <div class="control-item">
+                        <div class="control-label"><span>밀도 (ρ)</span><span class="control-val" id="v_rho">1050 kg/m³</span></div>
+                        <input type="range" id="rhoVal" min="900" max="1200" step="10" value="1050">
+                    </div>
+                </div>
+            </details>
+
+            <div class="btn-group">
+                <button class="btn btn-primary" id="btnStart" onclick="toggleSim()">시작</button>
+                <button class="btn btn-danger" onclick="resetSim()">초기화</button>
+            </div>
+            <button class="btn" onclick="openModal()" style="margin-top: 4px;">🧪 실험 결과 데이터 입력</button>
         </div>
 
-        <div class="canvas-grid">
-            <div class="canvas-wrapper">
-                <div class="canvas-label">🧬 정밀 인체 해부학 단면 (HD)</div>
-                <canvas id="modelCanvas" width="300" height="200"></canvas>
-            </div>
-            <div class="canvas-wrapper">
-                <div class="canvas-label">🔥 고대비 실시간 열화상 ($T$)</div>
-                <canvas id="heatCanvas" width="300" height="200"></canvas>
-            </div>
-        </div>
+        <!-- Display Area (Right 70%) -->
+        <div class="display-panel">
+            <!-- Sim Visual + Results Block -->
+            <div class="sim-block">
+                <div class="canvas-wrapper">
+                    <div class="control-label"><span>2D 수치해석 열화상 필드 (HD Skin Structure)</span><span id="timeDisplay" style="color:var(--primary); font-weight:700;">0.0 s</span></div>
+                    <div class="canvas-container">
+                        <canvas id="simCanvas" width="500" height="300"></canvas>
+                    </div>
+                </div>
 
-        <div class="legend-container">
-            <div class="legend-labels">
-                <span><b>35.0°C</b> (저체온)</span>
-                <span><b>36.5°C</b> (정상)</span>
-                <span><b>38.5°C</b> (미열)</span>
-                <span><b>41.0°C</b> (고열)</span>
+                <!-- Simulation Metrics -->
+                <div class="results-card">
+                    <div class="results-header">📊 Simulation Results</div>
+                    <div class="metric-row">
+                        <span class="metric-label">최고 온도:</span>
+                        <span class="metric-value metric-highlight" id="resMaxTemp">37.0 ℃</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">평균 온도:</span>
+                        <span class="metric-value" id="resAvgTemp">37.0 ℃</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">혈관 주변 온도:</span>
+                        <span class="metric-value" id="resVesselTemp">37.0 ℃</span>
+                    </div>
+                    <div class="metric-row" style="border-top:1px dashed var(--border); padding-top:8px;">
+                        <span class="metric-label">저장된 에너지:</span>
+                        <span class="metric-value" id="resEnergyIn">0 J</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">유체 제거 에너지:</span>
+                        <span class="metric-value" style="color:var(--primary);" id="resEnergyFluid">0 J</span>
+                    </div>
+                    <div class="metric-row" style="border-top:1px dashed var(--border); padding-top:8px;">
+                        <span class="metric-label">실험 오차율:</span>
+                        <span class="metric-value" style="color:var(--accent-red);" id="resErrorRate">N/A</span>
+                    </div>
+                </div>
             </div>
-            <div class="legend-bar"></div>
-            <p style="font-size: 0.78rem; color: #94a3b8; text-align: center; margin-top: 4px;">* 클릭하면 해당 위치에 즉시 온열 열원이 형성되며 세부 조직 온도가 실시간 추적됩니다.</p>
-        </div>
-    </div>
 
-    <div class="card">
-        <div class="card-header">
-            <span class="card-title">⚙️ 제어 파라미터</span>
-        </div>
-
-        <div class="control-item">
-            <div class="control-label">
-                <span>혈류 관류율 ($w_b$)</span>
-                <span class="control-val" id="perfVal">0.005 1/s</span>
-            </div>
-            <input type="range" id="perfusion" min="0" max="0.02" step="0.001" value="0.005">
-        </div>
-
-        <div class="control-item">
-            <div class="control-label">
-                <span>외부 열원 출력 ($q_{ext}$)</span>
-                <span class="control-val" id="heatVal">35000 W/m³</span>
-            </div>
-            <input type="range" id="heatSource" min="0" max="80000" step="2000" value="35000">
-        </div>
-
-        <div class="control-item">
-            <div class="control-label">
-                <span>혈액 유입 온도 ($T_a$)</span>
-                <span class="control-val" id="bloodTempVal">36.5 °C</span>
-            </div>
-            <input type="range" id="bloodTemp" min="32" max="40" step="0.5" value="36.5">
-        </div>
-
-        <div class="btn-group">
-            <button class="btn btn-primary" id="startBtn">일시정지</button>
-            <button class="btn btn-danger" id="resetBtn">초기화</button>
-        </div>
-
-        <div class="info-card">
-            <div class="info-row">
-                <span>선택 위치 좌표:</span>
-                <span class="info-value" id="clickCoord">미선택</span>
-            </div>
-            <div class="info-row">
-                <span>해당 레이어 조직:</span>
-                <span class="info-value" id="tissueType">-</span>
-            </div>
-            <div class="info-row" style="margin-top: 8px; border-top: 1px dashed #bae6fd; padding-top: 8px;">
-                <span style="font-size: 0.95rem; font-weight: 700;">현재 실시간 온도:</span>
-                <span class="info-value" id="selectedTemp" style="font-size: 1.25rem; color: #0284c7;">- °C</span>
+            <!-- 3 Recommended Graphs -->
+            <div class="graph-grid">
+                <div class="graph-card">
+                    <div class="graph-title">📈 ① 시간 – 온도</div>
+                    <div class="chart-container"><canvas id="chart1"></canvas></div>
+                </div>
+                <div class="graph-card">
+                    <div class="graph-title">📊 ② 유량 – 최고온도</div>
+                    <div class="chart-container"><canvas id="chart2"></canvas></div>
+                </div>
+                <div class="graph-card">
+                    <div class="graph-title">📍 ③ 위치 – 온도 단면</div>
+                    <div class="chart-container"><canvas id="chart3"></canvas></div>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
+<!-- Modal for Entering Experimental Data -->
+<div class="modal-overlay" id="expModal">
+    <div class="modal">
+        <div class="modal-title">🧪 실제 실험 데이터 입력</div>
+        <div class="modal-input">
+            <label>실험 측정 최고 온도 (℃)</label>
+            <input type="number" id="expMaxTemp" placeholder="예: 42.5" step="0.1">
+        </div>
+        <div class="modal-input">
+            <label>실험 측정 유체 제거 열량 (J)</label>
+            <input type="number" id="expEnergy" placeholder="예: 1250" step="10">
+        </div>
+        <div class="btn-group">
+            <button class="btn btn-primary" onclick="applyExpData()">적용 및 오차 분석</button>
+            <button class="btn" onclick="closeModal()">취소</button>
+        </div>
+    </div>
+</div>
+
 <script>
-const W = 150, H = 100;
-const modelCanvas = document.getElementById('modelCanvas');
-const heatCanvas = document.getElementById('heatCanvas');
-const mCtx = modelCanvas.getContext('2d');
-const hCtx = heatCanvas.getContext('2d');
+// Simulation Dimensions Grid
+const W = 100, H = 60;
+let currentMode = 'B'; // 'A' or 'B'
+let isRunning = false;
+let animId = null;
+let simTime = 0;
 
-let dt = 0.04, dx = 0.001;
-let T = Array.from({ length: H }, () => new Float32Array(W).fill(36.5));
-let T_next = Array.from({ length: H }, () => new Float32Array(W).fill(36.5));
-let tissueMap = Array.from({ length: H }, () => new Uint8Array(W));
+// Arrays for Finite Difference Method (FDM)
+let T = Array.from({ length: H }, () => new Float32Array(W).fill(37.0));
+let T_next = Array.from({ length: H }, () => new Float32Array(W).fill(37.0));
 
-let isRunning = true;
-let selectedX = -1, selectedY = -1;
-let heatSourcePos = { x: -1, y: -1 };
+// Thermodynamics Energy Tracking (Joules)
+let totalEnergyIn = 0;
+let totalEnergyFluid = 0;
+let expData = null;
 
-// High Quality Procedural Tissue Generator
-function drawHDTissue() {
-    const canvas = document.createElement('canvas');
-    canvas.width = W; canvas.height = H;
-    const ctx = canvas.getContext('2d');
+const canvas = document.getElementById('simCanvas');
+const ctx = canvas.getContext('2d');
 
-    // 1. Epidermis (표피) - Salmony Light Pink
-    ctx.fillStyle = '#f3a988';
-    ctx.fillRect(0, 0, W, H * 0.12);
+// --- Procedural High Quality HD Tissue Generator ---
+function drawTissueBackground() {
+    const bgCanvas = document.createElement('canvas');
+    bgCanvas.width = 500; bgCanvas.height = 300;
+    const bCtx = bgCanvas.getContext('2d');
 
-    // Dermal Papillae (진피 유두층 물결 무늬)
-    ctx.fillStyle = '#e07a5f';
-    ctx.beginPath();
-    ctx.moveTo(0, H * 0.12);
-    for (let x = 0; x <= W; x += 6) {
-        ctx.lineTo(x, H * 0.12 + Math.sin(x * 0.5) * 3);
-    }
-    ctx.lineTo(W, H * 0.35);
-    ctx.lineTo(0, H * 0.35);
-    ctx.fill();
+    // 1. Epidermis (표피)
+    bCtx.fillStyle = '#f8fafc'; bCtx.fillRect(0, 0, 500, 30);
+    // Dermal Papillae Wavy Line
+    bCtx.fillStyle = '#fca5a5';
+    bCtx.beginPath(); bCtx.moveTo(0, 30);
+    for (let x = 0; x <= 500; x += 10) bCtx.lineTo(x, 30 + Math.sin(x * 0.1) * 3);
+    bCtx.lineTo(500, 80); bCtx.lineTo(0, 80); bCtx.fill();
 
-    // 2. Dermis (진피) - Pink
-    ctx.fillStyle = '#e57373';
-    ctx.fillRect(0, H * 0.15, W, H * 0.22);
+    // 2. Dermis (진피)
+    bCtx.fillStyle = '#f87171'; bCtx.fillRect(0, 80, 500, 70);
 
-    // 3. Subcutaneous Fat (피하지방) - Yellow Spheres
-    ctx.fillStyle = '#fbc02d';
-    ctx.fillRect(0, H * 0.37, W, H * 0.33);
-    
-    // Fat cells pattern
-    for (let y = H * 0.37; y < H * 0.7; y += 5) {
-        for (let x = (y % 2 * 3); x < W; x += 6) {
-            ctx.fillStyle = '#ffeb3b';
-            ctx.beginPath();
-            ctx.arc(x, y, 2.2, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.strokeStyle = '#f57f17';
-            ctx.lineWidth = 0.4;
-            ctx.stroke();
+    // 3. Subcutaneous Fat (피하지방 & 튜브)
+    bCtx.fillStyle = '#fde047'; bCtx.fillRect(0, 150, 500, 80);
+    // Yellow fat cells pattern
+    bCtx.fillStyle = '#facc15';
+    for (let y = 155; y < 225; y += 12) {
+        for (let x = (y%2)*8; x < 500; x += 16) {
+            bCtx.beginPath(); bCtx.arc(x, y, 4, 0, Math.PI*2); bCtx.fill();
         }
     }
 
-    // 4. Muscle (근육층) - Crimson Fibers
-    ctx.fillStyle = '#b71c1c';
-    ctx.fillRect(0, H * 0.70, W, H * 0.30);
-    ctx.strokeStyle = '#d32f2f';
-    ctx.lineWidth = 1;
-    for (let y = H * 0.72; y < H; y += 4) {
-        ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(W, y + Math.sin(y) * 2);
-        ctx.stroke();
+    // 4. Muscle (근육층)
+    bCtx.fillStyle = '#991b1b'; bCtx.fillRect(0, 230, 500, 70);
+    bCtx.strokeStyle = '#b91c1c'; bCtx.lineWidth = 1.5;
+    for (let y = 235; y < 300; y += 6) {
+        bCtx.beginPath(); bCtx.moveTo(0, y); bCtx.lineTo(500, y); bCtx.stroke();
     }
 
-    // 5. Advanced Branching Blood Vessels (동·정맥 혈관망)
-    function drawVesselBranch(startX, startY, isArtery) {
-        ctx.strokeStyle = isArtery ? '#d50000' : '#1565c0';
-        ctx.lineWidth = isArtery ? 3 : 2.5;
-        
-        ctx.beginPath();
-        ctx.moveTo(startX, startY);
-        let midX = startX + 40;
-        let midY = startY + (isArtery ? -8 : 8);
-        let endX = startX + 80;
-        let endY = startY;
-        ctx.bezierCurveTo(midX, midY, midX + 20, endY + 10, endX, endY);
-        ctx.stroke();
+    return bgCanvas;
+}
+const tissueBG = drawTissueBackground();
 
-        // Sub-branches
-        ctx.lineWidth = 1.2;
-        ctx.beginPath();
-        ctx.moveTo(midX, midY);
-        ctx.lineTo(midX + 15, midY - 12);
-        ctx.moveTo(midX + 30, midY + 4);
-        ctx.lineTo(midX + 45, midY - 10);
-        ctx.stroke();
-    }
+// --- Chart.js Setup for 3 Graphs ---
+const chart1 = new Chart(document.getElementById('chart1'), {
+    type: 'line',
+    data: {
+        labels: [],
+        datasets: [
+            { label: 'Sim', borderColor: '#0284c7', data: [], borderWidth: 2, pointRadius: 0 },
+            { label: 'Exp', borderColor: '#ef4444', borderDash: [4, 4], data: [], borderWidth: 2, pointRadius: 0 }
+        ]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { min: 30, max: 60 } } }
+});
 
-    drawVesselBranch(0, H * 0.52, true);  // Artery
-    drawVesselBranch(60, H * 0.45, true);
-    drawVesselBranch(10, H * 0.58, false); // Vein
-    drawVesselBranch(70, H * 0.50, false);
+const chart2 = new Chart(document.getElementById('chart2'), {
+    type: 'bar',
+    data: {
+        labels: ['0', '10', '20', '30', '50'],
+        datasets: [{ label: '최고온도 (℃)', backgroundColor: '#3b82f6', data: [52, 48, 44, 41, 39] }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+});
 
-    return canvas;
+const chart3 = new Chart(document.getElementById('chart3'), {
+    type: 'line',
+    data: {
+        labels: Array.from({length: W}, (_, i) => i),
+        datasets: [{ label: '온도 단면', borderColor: '#10b981', data: Array(W).fill(37), borderWidth: 2, pointRadius: 0 }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { min: 30, max: 60 } } }
+});
+
+// --- UI Binding & Inputs ---
+const controls = ['tHeat', 'flow', 'vesselDiam', 'tInit', 'maxTime', 'tExt', 'kVal', 'cVal', 'rhoVal'];
+controls.forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.oninput = () => updateUIValues();
+});
+
+function updateUIValues() {
+    document.getElementById('v_tHeat').innerText = document.getElementById('tHeat').value + " ℃";
+    document.getElementById('v_flow').innerText = document.getElementById('flow').value + " mL/min";
+    document.getElementById('v_vesselDiam').innerText = document.getElementById('vesselDiam').value + " mm";
+    document.getElementById('v_tInit').innerText = document.getElementById('tInit').value + " ℃";
+    document.getElementById('v_maxTime').innerText = document.getElementById('maxTime').value + " s";
+    document.getElementById('v_tExt').innerText = document.getElementById('tExt').value + " ℃";
+    document.getElementById('v_k').innerText = document.getElementById('kVal').value + " W/m·K";
+    document.getElementById('v_c').innerText = document.getElementById('cVal').value + " J/kg·K";
+    document.getElementById('v_rho').innerText = document.getElementById('rhoVal').value + " kg/m³";
 }
 
-const tissueGraphic = drawHDTissue();
+function setMode(mode) {
+    currentMode = mode;
+    document.getElementById('btnModeA').classList.toggle('active', mode === 'A');
+    document.getElementById('btnModeB').classList.toggle('active', mode === 'B');
+    resetSim();
+}
 
-(function initMap() {
-    const ctx = tissueGraphic.getContext('2d');
-    const imgData = ctx.getImageData(0, 0, W, H).data;
+// --- FDM Physics Loop ---
+function stepPhysics() {
+    const dt = 0.1, dx = 0.001;
+    const k = parseFloat(document.getElementById('kVal').value);
+    const c = parseFloat(document.getElementById('cVal').value);
+    const rho = parseFloat(document.getElementById('rhoVal').value);
+    const tHeat = parseFloat(document.getElementById('tHeat').value);
+    const flow_mL = parseFloat(document.getElementById('flow').value); // mL/min
+    const diam_mm = parseFloat(document.getElementById('vesselDiam').value);
+    const tExt = parseFloat(document.getElementById('tExt').value);
 
-    for (let i = 0; i < H; i++) {
-        for (let j = 0; j < W; j++) {
-            let idx = (i * W + j) * 4;
-            let r = imgData[idx], g = imgData[idx+1], b = imgData[idx+2];
+    // Convert Flow Rate mL/min to Mass Flow Rate kg/s
+    const m_dot = (flow_mL / 60) * 1e-3; // kg/s
+    const c_b = 4184; // Water/Blood specific heat
 
-            if (r > 180 && g < 40 && b < 40) tissueMap[i][j] = 4;        // Red Vessel
-            else if (b > 160 && r < 50) tissueMap[i][j] = 5;            // Blue Vessel
-            else if (i < H * 0.12) tissueMap[i][j] = 0;                  // Epidermis
-            else if (i < H * 0.37) tissueMap[i][j] = 1;                  // Dermis
-            else if (i < H * 0.70) tissueMap[i][j] = 2;                  // Fat
-            else tissueMap[i][j] = 3;                                    // Muscle
-        }
-    }
-})();
+    const heatX = Math.floor(W / 2);
+    const heatY = 10; // Dermis layer
+    const vesselY = 35; // Subcutaneous Fat Layer
 
-const properties = {
-    0: { k: 0.35, rhoC: 3.7e6, qm: 200, name: "표피층 (Epidermis)", wbMult: 0.1 },
-    1: { k: 0.45, rhoC: 3.8e6, qm: 400, name: "진피층 (Dermis)", wbMult: 0.8 },
-    2: { k: 0.21, rhoC: 1.7e6, qm: 300, name: "피하지방층 (Subcutaneous Fat)", wbMult: 0.2 },
-    3: { k: 0.51, rhoC: 3.8e6, qm: 700, name: "근육층 (Muscle)", wbMult: 1.0 },
-    4: { k: 0.53, rhoC: 3.8e6, qm: 1000, name: "동맥 혈관 (Artery)", wbMult: 8.0 },
-    5: { k: 0.53, rhoC: 3.8e6, qm: 1000, name: "정맥 혈관 (Vein)", wbMult: 6.0 }
-};
-
-const perfInput = document.getElementById('perfusion');
-const heatInput = document.getElementById('heatSource');
-const bloodTempInput = document.getElementById('bloodTemp');
-
-perfInput.oninput = () => document.getElementById('perfVal').innerText = perfInput.value + " 1/s";
-heatInput.oninput = () => document.getElementById('heatVal').innerText = heatInput.value + " W/m³";
-bloodTempInput.oninput = () => document.getElementById('bloodTempVal').innerText = bloodTempInput.value + " °C";
-
-function updatePhysics() {
-    let wbBase = parseFloat(perfInput.value);
-    let q_ext = parseFloat(heatInput.value);
-    let Ta = parseFloat(bloodTempInput.value);
-    let cb = 3800, rhob = 1060;
+    let maxT = -999, sumT = 0, vesselT = 0;
 
     for (let i = 1; i < H - 1; i++) {
         for (let j = 1; j < W - 1; j++) {
-            let type = tissueMap[i][j];
-            let prop = properties[type];
-            let alpha = prop.k / prop.rhoC;
-
-            let d2T = (T[i+1][j] + T[i-1][j] + T[i][j+1] + T[i][j-1] - 4*T[i][j]) / (dx * dx);
-            let conduction = alpha * d2T;
-
-            let wb = wbBase * prop.wbMult;
-            let perfusion = (wb * rhob * cb / prop.rhoC) * (Ta - T[i][j]);
-            let metabolic = prop.qm / prop.rhoC;
-
-            let external = 0;
-            if (heatSourcePos.x !== -1 && Math.abs(i - heatSourcePos.y) < 6 && Math.abs(j - heatSourcePos.x) < 6) {
-                external = q_ext / prop.rhoC;
+            // Heat Source (Heat Source Center)
+            if (Math.hypot(i - heatY, j - heatX) < 4) {
+                T[i][j] = tHeat;
+                totalEnergyIn += 15 * dt; // Energy added
             }
 
-            T_next[i][j] = T[i][j] + dt * (conduction + perfusion + metabolic + external);
+            let d2T = (T[i+1][j] + T[i-1][j] + T[i][j+1] + T[i][j-1] - 4*T[i][j]) / (dx * dx);
+            let conduction = (k / (rho * c)) * d2T;
+            let coolingTerm = 0;
+
+            if (currentMode === 'A') {
+                // MODE A: Pennes Perfusion
+                let wb = (flow_mL / 100) * 0.01;
+                coolingTerm = (wb * 1060 * 3800 / (rho * c)) * (37.0 - T[i][j]);
+            } else {
+                // MODE B: Phantom Discrete Tube Flow
+                let tubeRadiusPx = Math.max(1, Math.floor(diam_mm / 2));
+                if (Math.abs(i - vesselY) <= tubeRadiusPx) {
+                    // Fluid Cooling Trench Calculation
+                    let h_conv = 500 * (1 + flow_mL * 0.05); // Convection coefficient
+                    let heatRemoved = h_conv * (T[i][j] - 37.0) * (dx * dx);
+                    coolingTerm = -heatRemoved / (rho * c);
+                    totalEnergyFluid += Math.max(0, heatRemoved * dt * 10);
+                }
+            }
+
+            T_next[i][j] = T[i][j] + dt * (conduction + coolingTerm);
+
+            let val = T_next[i][j];
+            sumT += val;
+            if (val > maxT) maxT = val;
+            if (i === vesselY && j === heatX) vesselT = val;
         }
     }
 
-    for (let j = 0; j < W; j++) {
-        T_next[0][j] = T_next[1][j] - 0.03;
-        T_next[H-1][j] = 36.5;
-    }
+    // Boundary Conditions
+    for (let j = 0; j < W; j++) T_next[0][j] = tExt;
 
     let temp = T; T = T_next; T_next = temp;
-}
+    simTime += dt;
 
-// Ultra-High Contrast Thermal Palette (35.0°C ~ 41.0°C Range)
-function getHighContrastHeatColor(temp) {
-    let norm = Math.max(0, Math.min(1, (temp - 35.0) / 6.0)); // Narrow range for high contrast
-    let r = 0, g = 0, b = 0;
+    // Update Results UI
+    document.getElementById('timeDisplay').innerText = simTime.toFixed(1) + " s";
+    document.getElementById('resMaxTemp').innerText = maxT.toFixed(1) + " ℃";
+    document.getElementById('resAvgTemp').innerText = (sumT / (W*H)).toFixed(1) + " ℃";
+    document.getElementById('resVesselTemp').innerText = vesselT.toFixed(1) + " ℃";
+    document.getElementById('resEnergyIn').innerText = Math.round(totalEnergyIn) + " J";
+    document.getElementById('resEnergyFluid').innerText = Math.round(totalEnergyFluid) + " J";
 
-    if (norm < 0.2) {         // Deep Blue to Cyan (35.0 ~ 36.2)
-        r = 29; g = Math.floor(180 * (norm / 0.2)); b = 220;
-    } else if (norm < 0.4) {  // Cyan to Emerald Green (36.2 ~ 37.4) - Normal range
-        r = 34; g = 197; b = Math.floor(220 * (1 - (norm - 0.2) / 0.2));
-    } else if (norm < 0.7) {  // Green to Gold/Yellow (37.4 ~ 39.2) - Mild heat
-        r = Math.floor(234 * ((norm - 0.4) / 0.3)); g = 179; b = 8;
-    } else if (norm < 0.9) {  // Yellow to Red (39.2 ~ 40.4) - High heat
-        r = 239; g = Math.floor(179 * (1 - (norm - 0.7) / 0.2)); b = 68;
-    } else {                  // Red to Deep Crimson (40.4 ~ 41.0+) - Extreme heat
-        r = Math.floor(159 + 80 * ((norm - 0.9) / 0.1)); g = 18; b = 57;
+    // Chart Updates every 1s
+    if (Math.floor(simTime * 10) % 10 === 0) {
+        chart1.data.labels.push(simTime.toFixed(0));
+        chart1.data.datasets[0].data.push(maxT.toFixed(1));
+        if (expData) chart1.data.datasets[1].data.push(expData.maxTemp);
+        chart1.update('none');
+
+        // Update Slice Graph 3 (Heat -> Tissue -> Vessel -> Muscle)
+        chart3.data.datasets[0].data = Array.from({length: W}, (_, j) => T[vesselY][j]);
+        chart3.update('none');
     }
-    return [r, g, b];
+
+    if (simTime >= parseFloat(document.getElementById('maxTime').value)) toggleSim();
 }
 
+// --- Render Canvas Heatmap ---
 function render() {
-    mCtx.drawImage(tissueGraphic, 0, 0, modelCanvas.width, modelCanvas.height);
+    ctx.drawImage(tissueBG, 0, 0);
 
-    let imgData = hCtx.createImageData(W, H);
+    let imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    let data = imgData.data;
+
+    let diam_mm = parseFloat(document.getElementById('vesselDiam').value);
+    let vesselRadius = Math.max(2, Math.floor(diam_mm * 1.5));
+
     for (let i = 0; i < H; i++) {
         for (let j = 0; j < W; j++) {
-            let idx = (i * W + j) * 4;
-            let rgb = getHighContrastHeatColor(T[i][j]);
-            imgData.data[idx] = rgb[0];
-            imgData.data[idx+1] = rgb[1];
-            imgData.data[idx+2] = rgb[2];
-            imgData.data[idx+3] = 255;
+            let temp = T[i][j];
+            let norm = Math.max(0, Math.min(1, (temp - 35) / 20)); // Color map 35 ~ 55 ℃
+
+            if (norm > 0.1) {
+                for (let py = 0; py < 5; py++) {
+                    for (let px = 0; px < 5; px++) {
+                        let idx = (((i * 5) + py) * 500 + ((j * 5) + px)) * 4;
+                        data[idx] = Math.min(255, data[idx] + norm * 180);     // Red
+                        data[idx+1] = Math.max(0, data[idx+1] - norm * 100);  // Green
+                        data[idx+2] = Math.max(0, data[idx+2] - norm * 150);  // Blue
+                    }
+                }
+            }
         }
     }
-    
-    let tempCanvas = document.createElement('canvas');
-    tempCanvas.width = W; tempCanvas.height = H;
-    tempCanvas.getContext('2d').putImageData(imgData, 0, 0);
-    hCtx.drawImage(tempCanvas, 0, 0, heatCanvas.width, heatCanvas.height);
+    ctx.putImageData(imgData, 0, 0);
 
-    if (selectedX !== -1 && selectedY !== -1) {
-        mCtx.strokeStyle = "#0284c7"; mCtx.lineWidth = 2;
-        mCtx.strokeRect((selectedX / W) * modelCanvas.width - 4, (selectedY / H) * modelCanvas.height - 4, 8, 8);
-
-        hCtx.strokeStyle = "#ffffff"; hCtx.lineWidth = 2;
-        hCtx.strokeRect((selectedX / W) * heatCanvas.width - 4, (selectedY / H) * heatCanvas.height - 4, 8, 8);
+    // Draw Phantom Vessel Tube overlay
+    if (currentMode === 'B') {
+        ctx.strokeStyle = 'rgba(37, 99, 235, 0.8)';
+        ctx.lineWidth = vesselRadius;
+        ctx.beginPath();
+        ctx.moveTo(0, 175); ctx.lineTo(500, 175);
+        ctx.stroke();
     }
 }
 
 function loop() {
     if (isRunning) {
-        for(let step = 0; step < 3; step++) updatePhysics();
+        stepPhysics();
+        render();
+        animId = requestAnimationFrame(loop);
     }
-    render();
-
-    if (selectedX !== -1 && selectedY !== -1) {
-        document.getElementById('selectedTemp').innerText = T[selectedY][selectedX].toFixed(2) + " °C";
-    }
-    requestAnimationFrame(loop);
 }
 
-function handleCanvasClick(e) {
-    const rect = e.target.getBoundingClientRect();
-    let clickX = e.clientX - rect.left;
-    let clickY = e.clientY - rect.top;
-
-    selectedX = Math.floor((clickX / rect.width) * W);
-    selectedY = Math.floor((clickY / rect.height) * H);
-    heatSourcePos = { x: selectedX, y: selectedY };
-
-    let type = tissueMap[selectedY][selectedX];
-    document.getElementById('clickCoord').innerText = `(${selectedX}mm, ${selectedY}mm)`;
-    document.getElementById('tissueType').innerText = properties[type].name;
-}
-
-modelCanvas.addEventListener('click', handleCanvasClick);
-heatCanvas.addEventListener('click', handleCanvasClick);
-
-document.getElementById('startBtn').onclick = function() {
+function toggleSim() {
     isRunning = !isRunning;
-    this.innerText = isRunning ? "일시정지" : "재개";
-};
+    document.getElementById('btnStart').innerText = isRunning ? "일시정지" : "재개";
+    if (isRunning) loop();
+}
 
-document.getElementById('resetBtn').onclick = function() {
-    for (let i = 0; i < H; i++) {
-        T[i].fill(36.5); T_next[i].fill(36.5);
+function resetSim() {
+    if (isRunning) toggleSim();
+    simTime = 0; totalEnergyIn = 0; totalEnergyFluid = 0;
+    let tInit = parseFloat(document.getElementById('tInit').value);
+
+    for (let i = 0; i < H; i++) T[i].fill(tInit);
+    
+    document.getElementById('timeDisplay').innerText = "0.0 s";
+    document.getElementById('resMaxTemp').innerText = tInit.toFixed(1) + " ℃";
+    document.getElementById('resAvgTemp').innerText = tInit.toFixed(1) + " ℃";
+    document.getElementById('resVesselTemp').innerText = tInit.toFixed(1) + " ℃";
+    document.getElementById('resEnergyIn').innerText = "0 J";
+    document.getElementById('resEnergyFluid').innerText = "0 J";
+
+    chart1.data.labels = [];
+    chart1.data.datasets[0].data = [];
+    chart1.data.datasets[1].data = [];
+    chart1.update();
+    render();
+}
+
+// Modal Data Handler
+function openModal() { document.getElementById('expModal').style.display = 'flex'; }
+function closeModal() { document.getElementById('expModal').style.display = 'none'; }
+function applyExpData() {
+    let expTemp = parseFloat(document.getElementById('expMaxTemp').value);
+    if (!isNaN(expTemp)) {
+        expData = { maxTemp: expTemp };
+        let simMax = parseFloat(document.getElementById('resMaxTemp').innerText);
+        let errorRate = (Math.abs(expTemp - simMax) / expTemp) * 100;
+        document.getElementById('resErrorRate').innerText = errorRate.toFixed(2) + " %";
     }
-    heatSourcePos = { x: -1, y: -1 };
-};
+    closeModal();
+}
 
-loop();
+resetSim();
 </script>
 </body>
 </html>
