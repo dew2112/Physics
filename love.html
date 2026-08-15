@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>💖 오직 자기만을 위한 특별 소원권 뽑기! 💖</title>
+  <!-- Confetti 폭죽 라이브러리 -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    }
+    
+    /* 핑크핑크한 배경 & 하트 애니메이션 */
+    body {
+      background: linear-gradient(135deg, #ffb6c1 0%, #ffc0cb 50%, #ffe4e1 100%);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* 배경에 둥둥 떠다니는 하트들 */
+    .bg-heart {
+      position: absolute;
+      color: rgba(255, 105, 180, 0.35);
+      font-size: 1.8rem;
+      user-select: none;
+      animation: float 6s infinite ease-in-out;
+      z-index: 0;
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-25px) rotate(15deg); }
+    }
+
+    .card {
+      position: relative;
+      z-index: 10;
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(10px);
+      padding: 2.2rem 1.8rem;
+      border-radius: 28px;
+      box-shadow: 0 15px 35px rgba(255, 77, 109, 0.25);
+      text-align: center;
+      max-width: 400px;
+      width: 100%;
+      border: 3px solid #ff9ebb;
+    }
+    .heart-badge {
+      background: #ffe6ed;
+      color: #ff3366;
+      font-weight: bold;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      display: inline-block;
+      margin-bottom: 12px;
+      border: 1px solid #ffb3c1;
+    }
+    h1 {
+      font-size: 1.55rem;
+      color: #7209b7;
+      margin: 0 0 10px 0;
+    }
+    .love-msg {
+      font-size: 0.95rem;
+      color: #800f2f;
+      line-height: 1.6;
+      background: #fff0f5;
+      padding: 15px;
+      border-radius: 18px;
+      margin-bottom: 20px;
+      border: 1.5px solid #ffccd5;
+    }
+    .btn {
+      background: linear-gradient(135deg, #ff4d6d 0%, #ff758f 100%);
+      color: white;
+      border: none;
+      padding: 15px 25px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      border-radius: 16px;
+      cursor: pointer;
+      width: 100%;
+      box-shadow: 0 6px 18px rgba(255, 77, 109, 0.35);
+      transition: all 0.2s ease;
+    }
+    .btn:active {
+      transform: scale(0.97);
+    }
+    
+    /* 미니게임 영역 */
+    .game-box {
+      display: none;
+      margin-top: 15px;
+      background: #fff0f5;
+      padding: 20px;
+      border-radius: 20px;
+      border: 2px dashed #ff85a1;
+    }
+    .heart-btn {
+      font-size: 4.5rem;
+      background: none;
+      border: none;
+      cursor: pointer;
+      user-select: none;
+      transition: transform 0.1s ease;
+      display: inline-block;
+      margin: 10px 0;
+      filter: drop-shadow(0 5px 10px rgba(255,77,109,0.3));
+    }
+    .heart-btn:active {
+      transform: scale(1.35);
+    }
+    .counter {
+      font-size: 1.3rem;
+      font-weight: bold;
+      color: #ff2a6d;
+    }
+
+    /* 쿠폰/소원권 티켓 스타일 */
+    .ticket {
+      display: none;
+      margin-top: 20px;
+      background: #ffffff;
+      border: 2.5px dashed #ff4d6d;
+      border-radius: 20px;
+      padding: 22px;
+      position: relative;
+      animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      box-shadow: 0 8px 20px rgba(255, 154, 162, 0.2);
+    }
+    .ticket-title {
+      font-size: 0.85rem;
+      color: #ff758f;
+      font-weight: bold;
+      letter-spacing: 1.5px;
+    }
+    .ticket-content {
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: #4a0e17;
+      margin: 14px 0;
+      word-break: keep-all;
+      line-height: 1.4;
+    }
+    .ticket-footer {
+      font-size: 0.8rem;
+      color: #999;
+    }
+
+    @keyframes popIn { from { transform: scale(0.7); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  </style>
+</head>
+<body>
+
+  <!-- 배경 하트 효과들 -->
+  <div class="bg-heart" style="top: 8%; left: 10%; animation-delay: 0s;">💖</div>
+  <div class="bg-heart" style="top: 15%; right: 12%; animation-delay: 1.5s;">💕</div>
+  <div class="bg-heart" style="bottom: 12%; left: 8%; animation-delay: 2s;">💗</div>
+  <div class="bg-heart" style="bottom: 10%; right: 10%; animation-delay: 0.8s;">💘</div>
+  <div class="bg-heart" style="top: 50%; left: 3%; animation-delay: 2.5s;">🌸</div>
+  <div class="bg-heart" style="top: 48%; right: 4%; animation-delay: 1.2s;">✨</div>
+
+  <div class="card">
+    <span class="heart-badge">💌 SPECIAL EVENT FOR YOU 💌</span>
+    <h1>세상에서 제일 사랑하는 자기에게 💕</h1>
+    
+    <div class="love-msg">
+      항상 고맙고 사랑해! 🥰<br>
+      아래 하트를 누르고 미니게임을 성공하면<br>
+      <strong>'특별 소원권'</strong>이 무작위로 발급됩니다!
+    </div>
+
+    <!-- 미니게임 시작 버튼 -->
+    <button class="btn" id="startBtn" onclick="startGame()">하트 충전 게임 시작하기 💖</button>
+
+    <!-- 미니게임 진행 상자 -->
+    <div class="game-box" id="gameBox">
+      <div style="font-size:1rem; color:#800f2f; font-weight:bold;">하트를 10번 누르면 소원권 발급!</div>
+      <button class="heart-btn" id="heartBtn" onclick="clickHeart()">❤️</button>
+      <div class="counter" id="counterText">0 / 10</div>
+    </div>
+
+    <!-- 당첨된 소원권 티켓 -->
+    <div class="ticket" id="ticketBox">
+      <div class="ticket-title">✨ OFFICIAL COUPON ✨</div>
+      <div class="ticket-content" id="rewardText">💆‍♂️ 어깨 시원하게 안마 3분권</div>
+      <div class="ticket-footer">※ 유효기간: 평생 / 언제든 제시 가능!</div>
+      <button class="btn" style="margin-top: 15px; background: linear-gradient(135deg, #7209b7 0%, #a2d2ff 100%);" onclick="drawAgain()">소원권 다시 뽑기 🎲</button>
+    </div>
+  </div>
+
+  <script>
+    // Web Audio API를 활용한 효과음 재생기 (별도 오디오 파일 없이 소리 생성!)
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    // 하트 클릭 시 귀여운 '뿅' 효과음
+    function playPopSound() {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.08);
+      gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.08);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.08);
+    }
+
+    // 승리 시 '짠!' 환호 효과음
+    function playFanfareSound() {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const notes = [523.25, 659.25, 783.99, 1046.50]; // 도-미-솔-도
+      notes.forEach((freq, index) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.2, audioCtx.currentTime + index * 0.08);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + index * 0.08 + 0.3);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(audioCtx.currentTime + index * 0.08);
+        osc.stop(audioCtx.currentTime + index * 0.08 + 0.3);
+      });
+    }
+
+    // 업그레이드된 풍성한 소원권 리스트!
+    const rewards = [
+      "💆‍♂️ 정성 가득! 시원한 안마 3분권",
+      "✨ 오늘 하루 말하는 대로 들어주는 만능 소원권",
+      "🫂 꽉 끼어안고 안 놓아주는 1분 포옹권",
+      "😚 볼이나 입술에 뽀뽀 3번 연속 지급권",
+      "💋 심장 뛰는 달콤한 키스 1회 사용권",
+      "🍕 원하는 야식 마음대로 고르기권",
+      "🤤 장난칠 때 쓰는 '볼 꼬집기 1회 방어권'",
+      "☕️ 좋아하는 카페 디저트&음료 쏩니다!",
+      "👑 오늘 하루 무조건 '왕' 대접해주기권",
+      "🛌 주말에 아무것도 안 하고 종일 뒹굴거리기권"
+    ];
+
+    let count = 0;
+    const targetCount = 10;
+
+    function startGame() {
+      playPopSound();
+      document.getElementById('startBtn').style.display = 'none';
+      document.getElementById('gameBox').style.display = 'block';
+      count = 0;
+      document.getElementById('counterText').innerText = `${count} / ${targetCount}`;
+    }
+
+    function clickHeart() {
+      playPopSound(); // 누를 때마다 뿅! 소리
+      count++;
+      document.getElementById('counterText').innerText = `${count} / ${targetCount}`;
+
+      const heartBtn = document.getElementById('heartBtn');
+      heartBtn.style.transform = 'scale(1.35)';
+      setTimeout(() => heartBtn.style.transform = 'scale(1)', 100);
+
+      if (count >= targetCount) {
+        finishGame();
+      }
+    }
+
+    function finishGame() {
+      document.getElementById('gameBox').style.display = 'none';
+      playFanfareSound(); // 성공 시 '짠!' 소리
+      
+      // 하트 및 핑크색 폭죽 연출
+      confetti({
+        particleCount: 90,
+        spread: 80,
+        origin: { y: 0.6 },
+        colors: ['#ff4d6d', '#ff758f', '#ffb3c1', '#ffffff']
+      });
+
+      drawReward();
+    }
+
+    function drawReward() {
+      const randomReward = rewards[Math.floor(Math.random() * rewards.length)];
+      document.getElementById('rewardText').innerText = randomReward;
+      document.getElementById('ticketBox').style.display = 'block';
+    }
+
+    function drawAgain() {
+      playPopSound();
+      confetti({
+        particleCount: 50,
+        spread: 60,
+        origin: { y: 0.6 },
+        colors: ['#ff4d6d', '#ff758f', '#ffb3c1']
+      });
+      drawReward();
+    }
+  </script>
+</body>
+</html>
