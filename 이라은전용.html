@@ -23,7 +23,7 @@
       border-radius: 20px;
       box-shadow: 0 10px 25px rgba(0,0,0,0.1);
       text-align: center;
-      max-width: 400px;
+      max-width: 420px;
       width: 90%;
     }
     .badge {
@@ -59,6 +59,7 @@
       width: 100%;
       transition: all 0.2s ease;
     }
+    .btn:hover { background: #0056b3; }
     .btn:disabled {
       background: #ccc;
       cursor: not-allowed;
@@ -105,33 +106,70 @@
       padding: 25px;
       border-radius: 20px;
       text-align: center;
-      max-width: 320px;
-      width: 85%;
+      max-width: 360px;
+      width: 88%;
       box-shadow: 0 15px 30px rgba(0,0,0,0.3);
     }
     .modal-icon {
-      font-size: 3.5rem;
+      font-size: 3rem;
       margin-bottom: 10px;
     }
     .modal-title {
-      font-size: 1.3rem;
+      font-size: 1.25rem;
       font-weight: bold;
-      color: #ff3b30;
+      color: #1d1d1f;
       margin-bottom: 10px;
     }
     .modal-desc {
       font-size: 0.95rem;
-      color: #333;
+      color: #48484a;
       line-height: 1.5;
       margin-bottom: 20px;
       word-break: keep-all;
     }
+
+    /* 퀴즈 선택지 버튼들 */
+    .quiz-options {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    .quiz-btn {
+      background: #f2f2f7;
+      color: #1d1d1f;
+      border: 1px solid #d1d1d6;
+      padding: 12px 15px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      text-align: left;
+    }
+    .quiz-btn:hover {
+      background: #007aff;
+      color: white;
+      border-color: #007aff;
+    }
+
     .meme-img {
       width: 100%;
-      max-height: 160px;
+      max-height: 180px;
       object-fit: cover;
       border-radius: 10px;
       margin-bottom: 15px;
+    }
+
+    .step-badge {
+      display: inline-block;
+      background: #e5f1ff;
+      color: #007aff;
+      font-size: 0.8rem;
+      font-weight: bold;
+      padding: 4px 10px;
+      border-radius: 12px;
+      margin-bottom: 10px;
     }
 
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -156,35 +194,81 @@
     </div>
   </div>
 
-  <!-- 1차 팝업 (99%에서 튕김) -->
-  <div class="modal-overlay" id="modal1">
+  <!-- 1차 안내 모달 (99%에서 등장) -->
+  <div class="modal-overlay" id="modalNotice">
     <div class="modal">
       <div class="modal-icon">🚨</div>
-      <div class="modal-title">보안 인증 필요!</div>
+      <div class="modal-title" style="color:#ff3b30;">보안 검증 필요!</div>
       <div class="modal-desc">
-        송금 완성을 위해 <strong>'동생 자격 검증'</strong>이 필요합니다.<br><br>
-        아래 버튼을 눌러 본인이 착한 동생임을 증명하세요.
+        용돈 50,000원 송금 직전입니다.<br>
+        본인이 <strong>'착한 동생'</strong>인지 확인하기 위해<br>
+        자격 검증 테스터 3문항을 진행합니다.
       </div>
-      <button class="btn" style="background:#ff9500;" onclick="step2()">동생 자격 검증하기</button>
+      <button class="btn" style="background:#ff9500;" onclick="startQuiz()">검증 시작하기</button>
     </div>
   </div>
 
-  <!-- 2차 팝업 (자격 미달 + 짤방) -->
-  <div class="modal-overlay" id="modal2">
+  <!-- 퀴즈 진행 모달 -->
+  <div class="modal-overlay" id="modalQuiz">
     <div class="modal">
-      <!-- 약올리는 짤방 (기본 이미지) -->
+      <span class="step-badge" id="quizStep">Q1 / Q3</span>
+      <div class="modal-title" id="quizTitle">질문 제목</div>
+      <div class="modal-desc" id="quizDesc">질문 내용</div>
+      <div class="quiz-options" id="quizOptions">
+        <!-- JS로 선택지 버튼이 들어감 -->
+      </div>
+    </div>
+  </div>
+
+  <!-- 최종 억까/탈락 모달 -->
+  <div class="modal-overlay" id="modalFail">
+    <div class="modal">
       <img src="https://i.postimg.cc/85M02GZJ/image.jpg" alt="약올리기" class="meme-img" onerror="this.src='https://via.placeholder.com/300x200/ff3b30/ffffff?text=😜+메롱!';">
-      <div class="modal-title" style="color:#1d1d1f;">🚫 자격 미달 (송금 거절)</div>
-      <div class="modal-desc">
-        시스템 심사 결과:<br>
-        <span style="color:#ff3b30; font-weight:bold;">"평소에 착한 일을 안 해서 용돈을 받을 수 없습니다."</span><br><br>
-        (반성문 작성 후 2099년에 재시도하세요)
+      <div class="modal-title" style="color:#ff3b30;">🚫 최종 탈락 (용돈 지급 불가)</div>
+      <div class="modal-desc" id="failReason">
+        탈락 사유가 여기에 표시됩니다.
       </div>
       <button class="btn" style="background:#ff3b30;" onclick="closeAll()">억울하지만 닫기</button>
     </div>
   </div>
 
   <script>
+    // 퀴즈 데이터 (원하는 대로 질문/답변 수정 가능!)
+    const quizData = [
+      {
+        step: "Q1 / Q3",
+        title: "🧹 청소 및 태도 검증",
+        desc: "언니/오빠가 방 청소를 시켰을 때 당신의 올바른 행동은?",
+        options: [
+          { text: "1. 즉시 기쁜 마음으로 방을 구석구석 청소한다.", next: 1 },
+          { text: "2. '니 방은 니가 치워라'라고 말한다.", fail: "Q1 탈락: 언니/오빠에게 대드는 인성 미달로 송금 취소!" },
+          { text: "3. 안 들리는 척 핸드폰만 본다.", fail: "Q1 탈락: 뻔뻔함 지수 초과로 송금 거절!" }
+        ]
+      },
+      {
+        step: "Q2 / Q3",
+        title: "🍗 심부름 및 인성 검증",
+        desc: "언니/오빠가 '야, 아이스크림 좀 사와라' 했을 때 답은?",
+        options: [
+          { text: "1. '네! 제일 좋아하는 걸로 사올게요!' 하며 뛰어간다.", next: 2 },
+          { text: "2. '돈 줘' 라고 말한다.", fail: "Q2 탈락: 건방지게 돈을 요구해서 송금 거절!" },
+          { text: "3. '내가 왜?' 라며 거절한다.", fail: "Q2 탈락: 싸가지 상실로 서버에서 자동 차단!" }
+        ]
+      },
+      {
+        step: "Q3 / Q3",
+        title: "👑 서열 및 존경심 검증",
+        desc: "우리 집 최고의 비주얼이자 실세는 누구인가?",
+        options: [
+          { text: "1. 세상에서 제일 멋지고 예쁜 언니/오빠", next: "final" },
+          { text: "2. 나 (동생)", fail: "Q3 탈락: 근거 없는 자만심으로 인한 자격 박탈!" },
+          { text: "3. 귀여운 우리집 강아지/고양이", fail: "Q3 탈락: 서열 정리 미숙으로 인한 송금 실패!" }
+        ]
+      }
+    ];
+
+    let currentQuizIndex = 0;
+
     function startTransfer() {
       const btn = document.getElementById('sendBtn');
       const progressContainer = document.getElementById('progressContainer');
@@ -207,26 +291,68 @@
 
           if (currentPercent === 45) statusText.innerText = "5만원권 지폐 입출금 처리 중...";
           if (currentPercent === 85) statusText.innerText = "송금 완료 1초 전...";
-          if (currentPercent === 99) statusText.innerText = "최종 승인 대기 중 (숨참는 중)...";
+          if (currentPercent === 99) statusText.innerText = "최종 승인 대기 중...";
         } else {
           clearInterval(timer);
-          // 99%에서 1.5초간 기대감 부여 후 1차 팝업
           setTimeout(() => {
-            document.getElementById('modal1').style.display = 'flex';
-          }, 1500);
+            document.getElementById('modalNotice').style.display = 'flex';
+          }, 1200);
         }
       }, 40);
     }
 
-    function step2() {
-      document.getElementById('modal1').style.display = 'none';
-      // 2차 반전 팝업 등장
-      document.getElementById('modal2').style.display = 'flex';
+    function startQuiz() {
+      document.getElementById('modalNotice').style.display = 'none';
+      currentQuizIndex = 0;
+      showQuiz(currentQuizIndex);
+    }
+
+    function showQuiz(index) {
+      const quiz = quizData[index];
+      document.getElementById('quizStep').innerText = quiz.step;
+      document.getElementById('quizTitle').innerText = quiz.title;
+      document.getElementById('quizDesc').innerText = quiz.desc;
+
+      const optionsContainer = document.getElementById('quizOptions');
+      optionsContainer.innerHTML = '';
+
+      quiz.options.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = 'quiz-btn';
+        btn.innerText = opt.text;
+        
+        btn.onclick = () => {
+          if (opt.fail) {
+            // 오답을 눌러서 바로 탈락했을 때
+            showFail(opt.fail);
+          } else if (opt.next === "final") {
+            // 마지막 문제까지 정답을 맞췄을 때 억까 탈락!
+            showFail("🎉 축하합니다! 3문항 모두 정답입니다!<br><br>...하지만 <strong style='color:#ff3b30;'>'오늘 동생의 관상이 용돈 받을 관상이 아님'</strong>으로 인해 최종 송금이 거부되었습니다. (2099년에 재시도하세요)");
+          } else {
+            // 다음 문제로 이동
+            currentQuizIndex = opt.next;
+            showQuiz(currentQuizIndex);
+          }
+        };
+
+        optionsContainer.appendChild(btn);
+      });
+
+      document.getElementById('modalQuiz').style.display = 'flex';
+    }
+
+    function showFail(reasonHtml) {
+      document.getElementById('modalQuiz').style.display = 'none';
+      document.getElementById('failReason').innerHTML = reasonHtml;
+      document.getElementById('modalFail').style.display = 'flex';
     }
 
     function closeAll() {
-      document.getElementById('modal2').style.display = 'none';
-      // 리셋
+      document.getElementById('modalFail').style.display = 'none';
+      document.getElementById('modalNotice').style.display = 'none';
+      document.getElementById('modalQuiz').style.display = 'none';
+      
+      // 상태 초기화
       document.getElementById('sendBtn').disabled = false;
       document.getElementById('progressContainer').style.display = 'none';
       document.getElementById('progressBar').style.width = '0%';
