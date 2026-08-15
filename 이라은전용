@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🎁 [단독] 착한 동생 전용 용돈 5만원 즉시 지급!</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    }
+    body {
+      background-color: #f0f2f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+    .card {
+      background: white;
+      padding: 2.5rem;
+      border-radius: 20px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      text-align: center;
+      max-width: 400px;
+      width: 90%;
+    }
+    .badge {
+      background: #ffe0e6;
+      color: #ff3b30;
+      font-weight: bold;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      display: inline-block;
+      margin-bottom: 15px;
+    }
+    h1 {
+      font-size: 1.4rem;
+      color: #1d1d1f;
+      margin: 0 0 10px 0;
+    }
+    .amount {
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: #007aff;
+      margin-bottom: 20px;
+    }
+    .btn {
+      background: #007aff;
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      border-radius: 12px;
+      cursor: pointer;
+      width: 100%;
+      transition: all 0.2s ease;
+    }
+    .btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+
+    /* 진행률 바 */
+    .progress-container {
+      display: none;
+      margin-top: 25px;
+    }
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.9rem;
+      color: #666;
+      margin-bottom: 8px;
+    }
+    .progress-bar-bg {
+      background: #e5e5ea;
+      height: 14px;
+      border-radius: 7px;
+      overflow: hidden;
+    }
+    .progress-bar-fill {
+      background: #34c759;
+      height: 100%;
+      width: 0%;
+      transition: width 0.08s linear;
+    }
+
+    /* 모달 팝업 */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.6);
+      justify-content: center;
+      align-items: center;
+      animation: fadeIn 0.2s ease;
+      z-index: 100;
+    }
+    .modal {
+      background: white;
+      padding: 25px;
+      border-radius: 20px;
+      text-align: center;
+      max-width: 320px;
+      width: 85%;
+      box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+    }
+    .modal-icon {
+      font-size: 3.5rem;
+      margin-bottom: 10px;
+    }
+    .modal-title {
+      font-size: 1.3rem;
+      font-weight: bold;
+      color: #ff3b30;
+      margin-bottom: 10px;
+    }
+    .modal-desc {
+      font-size: 0.95rem;
+      color: #333;
+      line-height: 1.5;
+      margin-bottom: 20px;
+      word-break: keep-all;
+    }
+    .meme-img {
+      width: 100%;
+      max-height: 160px;
+      object-fit: cover;
+      border-radius: 10px;
+      margin-bottom: 15px;
+    }
+
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <span class="badge">🔥 선착순 1명 한정</span>
+    <h1>착한 동생 전용 용돈 폼미쳤다!</h1>
+    <div class="amount">💸 50,000원</div>
+    <button class="btn" id="sendBtn" onclick="startTransfer()">지금 바로 수령하기</button>
+
+    <div class="progress-container" id="progressContainer">
+      <div class="progress-label">
+        <span id="statusText">한국은행 서버 연결 중...</span>
+        <span id="percentText">0%</span>
+      </div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="progressBar"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 1차 팝업 (99%에서 튕김) -->
+  <div class="modal-overlay" id="modal1">
+    <div class="modal">
+      <div class="modal-icon">🚨</div>
+      <div class="modal-title">보안 인증 필요!</div>
+      <div class="modal-desc">
+        송금 완성을 위해 <strong>'동생 자격 검증'</strong>이 필요합니다.<br><br>
+        아래 버튼을 눌러 본인이 착한 동생임을 증명하세요.
+      </div>
+      <button class="btn" style="background:#ff9500;" onclick="step2()">동생 자격 검증하기</button>
+    </div>
+  </div>
+
+  <!-- 2차 팝업 (자격 미달 + 짤방) -->
+  <div class="modal-overlay" id="modal2">
+    <div class="modal">
+      <!-- 약올리는 짤방 (기본 이미지) -->
+      <img src="https://i.postimg.cc/85M02GZJ/image.jpg" alt="약올리기" class="meme-img" onerror="this.src='https://via.placeholder.com/300x200/ff3b30/ffffff?text=😜+메롱!';">
+      <div class="modal-title" style="color:#1d1d1f;">🚫 자격 미달 (송금 거절)</div>
+      <div class="modal-desc">
+        시스템 심사 결과:<br>
+        <span style="color:#ff3b30; font-weight:bold;">"평소에 착한 일을 안 해서 용돈을 받을 수 없습니다."</span><br><br>
+        (반성문 작성 후 2099년에 재시도하세요)
+      </div>
+      <button class="btn" style="background:#ff3b30;" onclick="closeAll()">억울하지만 닫기</button>
+    </div>
+  </div>
+
+  <script>
+    function startTransfer() {
+      const btn = document.getElementById('sendBtn');
+      const progressContainer = document.getElementById('progressContainer');
+      const progressBar = document.getElementById('progressBar');
+      const percentText = document.getElementById('percentText');
+      const statusText = document.getElementById('statusText');
+
+      btn.disabled = true;
+      progressContainer.style.display = 'block';
+
+      let currentPercent = 0;
+
+      const timer = setInterval(() => {
+        if (currentPercent < 99) {
+          currentPercent += currentPercent > 70 ? 1 : 3;
+          if(currentPercent > 99) currentPercent = 99;
+
+          progressBar.style.width = currentPercent + '%';
+          percentText.innerText = currentPercent + '%';
+
+          if (currentPercent === 45) statusText.innerText = "5만원권 지폐 입출금 처리 중...";
+          if (currentPercent === 85) statusText.innerText = "송금 완료 1초 전...";
+          if (currentPercent === 99) statusText.innerText = "최종 승인 대기 중 (숨참는 중)...";
+        } else {
+          clearInterval(timer);
+          // 99%에서 1.5초간 기대감 부여 후 1차 팝업
+          setTimeout(() => {
+            document.getElementById('modal1').style.display = 'flex';
+          }, 1500);
+        }
+      }, 40);
+    }
+
+    function step2() {
+      document.getElementById('modal1').style.display = 'none';
+      // 2차 반전 팝업 등장
+      document.getElementById('modal2').style.display = 'flex';
+    }
+
+    function closeAll() {
+      document.getElementById('modal2').style.display = 'none';
+      // 리셋
+      document.getElementById('sendBtn').disabled = false;
+      document.getElementById('progressContainer').style.display = 'none';
+      document.getElementById('progressBar').style.width = '0%';
+      document.getElementById('percentText').innerText = '0%';
+      document.getElementById('statusText').innerText = '한국은행 서버 연결 중...';
+    }
+  </script>
+</body>
+</html>
