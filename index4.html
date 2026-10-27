@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>세포막 인지질 상전이 및 열역학 시뮬레이터</title>
+    <!-- Chart.js 라이브러리 (그래프 시각화) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --text: #1e293b;
+            --border: #e2e8f0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 24px;
+            padding: 20px;
+            background: var(--card);
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            margin: 0 0 10px 0;
+            font-size: 1.6rem;
+            color: #0f172a;
+        }
+
+        p.subtitle {
+            margin: 0;
+            color: #64748b;
+            font-size: 0.95rem;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 900px) {
+            .grid { grid-template-columns: 1fr; }
+        }
+
+        .card {
+            background: var(--card);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .controls {
+            margin-bottom: 20px;
+        }
+
+        .slider-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: #cbd5e1;
+            outline: none;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-top: 15px;
+        }
+
+        .metric-box {
+            background: #f1f5f9;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .metric-label {
+            font-size: 0.8rem;
+            color: #64748b;
+            margin-bottom: 4px;
+        }
+
+        .metric-value {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        canvas#moleculeCanvas {
+            width: 100%;
+            height: 220px;
+            background: #0f172a;
+            border-radius: 8px;
+            display: block;
+        }
+
+        .phase-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            margin-top: 8px;
+        }
+
+        .badge-gel { background: #dbeafe; color: #1e40af; }
+        .badge-trans { background: #fef3c7; color: #92400e; }
+        .badge-fluid { background: #fce7f3; color: #9d174d; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>세포막 인지질 상전이 및 열역학 시뮬레이터</h1>
+        <p class="subtitle">열역학 제2법칙, 깁스 자유에너지 및 질서도 지수(Order Parameter) 시각화</p>
+    </header>
+
+    <div class="grid">
+        <!-- 제어 및 미시 캔버스 -->
+        <div class="card">
+            <h3>1. 온도 조절 및 미시적 분자 동역학</h3>
+            
+            <div class="controls">
+                <div class="slider-group">
+                    <label for="tempSlider">
+                        설정 온도 (T): <span id="tempVal">314.15</span> K (<span id="tempCelsius">41.0</span> °C)
+                    </label>
+                    <input type="range" id="tempSlider" min="283.15" max="333.15" step="0.25" value="314.15">
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-bottom: 12px;">
+                <span>현재 세포막 상태: </span>
+                <span id="phaseBadge" class="phase-badge badge-trans">상전이 진행 중 (Transition)</span>
+            </div>
+
+            <canvas id="moleculeCanvas"></canvas>
+
+            <div class="metrics-grid">
+                <div class="metric-box">
+                    <div class="metric-label">자유에너지 (ΔG)</div>
+                    <div class="metric-value" id="dispG">0.00 kJ/mol</div>
+                </div>
+                <div class="metric-box">
+                    <div class="metric-label">엔트로피 (ΔS)</div>
+                    <div class="metric-value" id="dispS">111.4 J/mol·K</div>
+                </div>
+                <div class="metric-box">
+                    <div class="metric-label">질서도 (S_order)</div>
+                    <div class="metric-value" id="dispOrder">0.50</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 열역학 그래프 -->
+        <div class="card">
+            <h3>2. 온도에 따른 열역학적 상태 변화 그래프</h3>
+            <canvas id="chartCanvas" style="height: 320px;"></canvas>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 물리 상수 (DPPC 인지질 기준 모델링)
+    const Tm = 314.15; // 상전이 온도 (41.0 °C)
+    const dH = 35.0;   // 엔탈피 변화량 (kJ/mol)
+    const dS_base = (dH * 1000) / Tm; // J/mol·K (약 111.4)
+
+    // DOM 요소
+    const tempSlider = document.getElementById('tempSlider');
+    const tempVal = document.getElementById('tempVal');
+    const tempCelsius = document.getElementById('tempCelsius');
+    const phaseBadge = document.getElementById('phaseBadge');
+    const dispG = document.getElementById('dispG');
+    const dispS = document.getElementById('dispS');
+    const dispOrder = document.getElementById('dispOrder');
+    const canvas = document.getElementById('moleculeCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // Canvas 크기 조절
+    canvas.width = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
+
+    // 인지질 분자 객체 생성
+    const numLipids = 24;
+    let lipids = [];
+    for(let i = 0; i < numLipids; i++) {
+        lipids.push({
+            x: (canvas.width / (numLipids + 1)) * (i + 1),
+            angle: 0,
+            vibeSpeed: Math.random() * 0.05 + 0.02
+        });
+    }
+
+    // 물리 상태 계산 함수
+    function calculatePhysics(T) {
+        const dT = T - Tm;
+        // 볼츠만 형태의 Smooth Phase Transition (상전이 폭 약 2K)
+        const transitionFactor = 1 / (1 + Math.exp(-dT / 0.5)); 
+        
+        // 질서도 (Order Parameter): 겔 상=0.9, 액정 상=0.1
+        const S_order = 0.9 - 0.8 * transitionFactor;
+        
+        // 엔트로피 (ΔS)
+        const S_eff = dS_base * transitionFactor;
+        
+        // 깁스 자유에너지 (ΔG = ΔH - TΔS)
+        const G = dH - (T * (S_eff) / 1000);
+
+        return { S_order, S_eff, G, transitionFactor };
+    }
+
+    // 캔버스 그리기 (분자 애니메이션)
+    let animationFrame;
+    let time = 0;
+
+    function drawMolecules() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        time += 0.05;
+
+        const T = parseFloat(tempSlider.value);
+        const { S_order, transitionFactor } = calculatePhysics(T);
+
+        // 진폭 및 난류성 (온도가 높을수록, 질서도가 낮을수록 가중)
+        const vibeAmp = (1 - S_order) * 20 + 2;
+
+        const headY = canvas.height / 2 - 30;
+        const tailLen = 50;
+
+        lipids.forEach((lipid, idx) => {
+            // 인지질 머리 (Head)
+            const headX = lipid.x + Math.sin(time * lipid.vibeSpeed + idx) * vibeAmp * 0.3;
+            ctx.beginPath();
+            ctx.arc(headX, headY, 8, 0, Math.PI * 2);
+            ctx.fillStyle = '#38bdf8';
+            ctx.fill();
+            ctx.strokeStyle = '#0284c7';
+            ctx.stroke();
+
+            // 인지질 꼬리 2개 (Tails)
+            for(let t = -1; t <= 1; t += 2) {
+                ctx.beginPath();
+                ctx.moveTo(headX + t * 3, headY + 8);
+
+                const bend = Math.sin(time * 2 + idx + t) * vibeAmp;
+                const endX = headX + t * 4 + bend;
+                const endY = headY + 8 + tailLen;
+
+                ctx.quadraticCurveTo(headX + bend * 0.5, headY + 8 + tailLen/2, endX, endY);
+                ctx.strokeStyle = '#f43f5e';
+                ctx.lineWidth = 2.5;
+                ctx.stroke();
+            }
+        });
+
+        animationFrame = requestAnimationFrame(drawMolecules);
+    }
+
+    // Chart.js 그래프 초기화
+    const chartCtx = document.getElementById('chartCanvas').getContext('2d');
+    const tempsArr = [];
+    const gArr = [];
+    const orderArr = [];
+
+    for(let t = 283.15; t <= 333.15; t += 1) {
+        tempsArr.push((t - 273.15).toFixed(1) + '°C');
+        const res = calculatePhysics(t);
+        gArr.push(res.G.toFixed(2));
+        orderArr.push(res.S_order.toFixed(2));
+    }
+
+    const chart = new Chart(chartCtx, {
+        type: 'line',
+        data: {
+            labels: tempsArr,
+            datasets: [
+                {
+                    label: '자유에너지 ΔG (kJ/mol)',
+                    data: gArr,
+                    borderColor: '#2563eb',
+                    backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                    yAxisID: 'yG',
+                    tension: 0.3
+                },
+                {
+                    label: '질서도 지수 S_order',
+                    data: orderArr,
+                    borderColor: '#f43f5e',
+                    borderDash: [5, 5],
+                    yAxisID: 'yOrder',
+                    tension: 0.3
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                yG: {
+                    type: 'linear',
+                    position: 'left',
+                    title: { display: true, text: 'ΔG (kJ/mol)' }
+                },
+                yOrder: {
+                    type: 'linear',
+                    position: 'right',
+                    min: 0,
+                    max: 1,
+                    title: { display: true, text: '질서도 지수 (0~1)' },
+                    grid: { drawOnChartArea: false }
+                }
+            }
+        }
+    });
+
+    // UI 업데이트 함수
+    function updateUI() {
+        const T = parseFloat(tempSlider.value);
+        const C = (T - 273.15).toFixed(1);
+        
+        tempVal.innerText = T.toFixed(2);
+        tempCelsius.innerText = C;
+
+        const { S_order, S_eff, G } = calculatePhysics(T);
+
+        dispG.innerText = G.toFixed(2) + ' kJ/mol';
+        dispS.innerText = S_eff.toFixed(1) + ' J/mol·K';
+        dispOrder.innerText = S_order.toFixed(2);
+
+        // 상 상태 배지 업데이트
+        if(T < Tm - 1) {
+            phaseBadge.innerText = '겔 상 (Gel Phase - 고체/정렬)';
+            phaseBadge.className = 'phase-badge badge-gel';
+        } else if(T > Tm + 1) {
+            phaseBadge.innerText = '액정 상 (Fluid Phase - 유동적/무질서)';
+            phaseBadge.className = 'phase-badge badge-fluid';
+        } else {
+            phaseBadge.innerText = '상전이 구간 (Phase Transition)';
+            phaseBadge.className = 'phase-badge badge-trans';
+        }
+    }
+
+    tempSlider.addEventListener('input', updateUI);
+
+    // 실행
+    updateUI();
+    drawMolecules();
+</script>
+
+</body>
+</html>
